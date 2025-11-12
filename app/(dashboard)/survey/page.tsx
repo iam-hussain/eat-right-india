@@ -120,14 +120,14 @@ export default function SurveyFormsPage() {
             <Button
               variant="ghost"
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-              className="h-8 px-2"
+              className="h-8 px-0"
             >
               District
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           )
         },
-        cell: ({ row }) => <div className="font-medium">{row.getValue('district')}</div>,
+        cell: ({ row }) => <div className="pl-[15px] font-medium">{row.getValue('district')}</div>,
       },
       {
         accessorKey: 'taluk',
@@ -136,14 +136,14 @@ export default function SurveyFormsPage() {
             <Button
               variant="ghost"
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-              className="h-8 px-2"
+              className="h-8 px-0"
             >
               Taluk
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           )
         },
-        cell: ({ row }) => <div>{row.getValue('taluk') || '-'}</div>,
+        cell: ({ row }) => <div className="pl-[15px]">{row.getValue('taluk') || '-'}</div>,
       },
       {
         accessorKey: 'village',
@@ -152,14 +152,14 @@ export default function SurveyFormsPage() {
             <Button
               variant="ghost"
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-              className="h-8 px-2"
+              className="h-8 px-0"
             >
               Village
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           )
         },
-        cell: ({ row }) => <div>{row.getValue('village') || '-'}</div>,
+        cell: ({ row }) => <div className="pl-[15px]">{row.getValue('village') || '-'}</div>,
       },
       {
         accessorKey: '_count.shopEntries',
@@ -168,7 +168,7 @@ export default function SurveyFormsPage() {
             <Button
               variant="ghost"
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-              className="h-8 px-2"
+              className="h-8 px-0"
             >
               Shop Entries
               <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -177,7 +177,7 @@ export default function SurveyFormsPage() {
         },
         cell: ({ row }) => {
           const count = row.original._count.shopEntries
-          return <div>{count}</div>
+          return <div className="pl-[15px]">{count}</div>
         },
       },
       {
@@ -187,7 +187,7 @@ export default function SurveyFormsPage() {
             <Button
               variant="ghost"
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-              className="h-8 px-2"
+              className="h-8 px-0"
             >
               Created
               <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -196,7 +196,7 @@ export default function SurveyFormsPage() {
         },
         cell: ({ row }) => {
           const date = new Date(row.getValue('createdAt'))
-          return <div>{date.toLocaleDateString()}</div>
+          return <div className="pl-[15px]">{date.toLocaleDateString()}</div>
         },
         sortingFn: (rowA, rowB) => {
           const dateA = new Date(rowA.getValue('createdAt') as Date)
@@ -211,7 +211,7 @@ export default function SurveyFormsPage() {
             <Button
               variant="ghost"
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-              className="h-8 px-2"
+              className="h-8 px-0"
             >
               Updated
               <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -220,7 +220,7 @@ export default function SurveyFormsPage() {
         },
         cell: ({ row }) => {
           const date = new Date(row.getValue('updatedAt'))
-          return <div>{date.toLocaleDateString()}</div>
+          return <div className="pl-[15px]">{date.toLocaleDateString()}</div>
         },
         sortingFn: (rowA, rowB) => {
           const dateA = new Date(rowA.getValue('updatedAt') as Date)
@@ -350,16 +350,16 @@ export default function SurveyFormsPage() {
 
   if (loading) {
     return (
-      <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4 overflow-x-hidden">
+      <div className="w-full max-w-7xl mx-auto sm:py-8 sm:px-4 overflow-x-hidden">
         <div className="text-center">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4 overflow-x-hidden">
-      <Card>
-        <CardHeader>
+    <div className="w-full max-w-7xl mx-auto sm:py-8 sm:px-4 overflow-x-hidden">
+      <Card className="border-0 sm:border shadow-none sm:shadow">
+        <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <CardTitle className="text-lg sm:text-xl">Survey Forms</CardTitle>
@@ -374,7 +374,7 @@ export default function SurveyFormsPage() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
           <div className="space-y-4 mb-4">
             <div className="flex flex-wrap items-center gap-2 sm:gap-4">
               <Input
@@ -385,9 +385,10 @@ export default function SurveyFormsPage() {
               />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
+                  <Button variant="outline" className="whitespace-nowrap">
                     <Filter className="mr-2 h-4 w-4" />
-                    Columns
+                    <span className="hidden sm:inline">Columns</span>
+                    <span className="sm:hidden">Cols</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="max-h-96 overflow-y-auto">
@@ -410,7 +411,7 @@ export default function SurveyFormsPage() {
               </DropdownMenu>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
+                  <Button variant="outline" className="whitespace-nowrap">
                     <Download className="mr-2 h-4 w-4" />
                     Export
                   </Button>
@@ -428,19 +429,19 @@ export default function SurveyFormsPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className="w-full sm:w-auto"
+                className="whitespace-nowrap"
               >
                 {showAdvancedFilters ? (
                   <>
                     <ChevronUp className="mr-2 h-4 w-4" />
-                    <span className="hidden sm:inline">Hide Advanced Filters</span>
-                    <span className="sm:hidden">Hide Filters</span>
+                    <span className="hidden sm:inline">Hide Filters</span>
+                    <span className="sm:hidden">Hide</span>
                   </>
                 ) : (
                   <>
                     <ChevronDown className="mr-2 h-4 w-4" />
-                    <span className="hidden sm:inline">Show Advanced Filters</span>
-                    <span className="sm:hidden">Show Filters</span>
+                    <span className="hidden sm:inline">Show Filters</span>
+                    <span className="sm:hidden">Filters</span>
                   </>
                 )}
               </Button>
@@ -448,7 +449,7 @@ export default function SurveyFormsPage() {
 
             {/* Advanced Filters Section */}
             {showAdvancedFilters && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4 border rounded-md bg-muted/50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-2 sm:p-4 border rounded-md bg-muted/50">
                 <div className="space-y-1.5 sm:space-y-2">
                   <Label htmlFor="date-from" className="text-sm">Created Date From</Label>
                   <Input

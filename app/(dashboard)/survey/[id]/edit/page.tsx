@@ -38,7 +38,7 @@ export default function EditSurveyFormPage() {
 
   if (loading) {
     return (
-      <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4">
+      <div className="w-full max-w-7xl mx-auto sm:py-8 sm:px-4">
         <div className="text-center">Loading...</div>
       </div>
     )
@@ -49,7 +49,7 @@ export default function EditSurveyFormPage() {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4">
+    <div className="w-full max-w-7xl mx-auto sm:py-8 sm:px-4">
       <SurveyFormForm initialData={formData} mode="edit" />
     </div>
   )

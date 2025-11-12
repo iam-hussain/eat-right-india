@@ -56,8 +56,8 @@ export function SurveyFormForm({ initialData, mode = 'create' }: SurveyFormFormP
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
+    <Card className="w-full max-w-2xl mx-auto border-0 sm:border shadow-none sm:shadow">
+      <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-6">
         <CardTitle className="text-lg sm:text-xl">{mode === 'edit' ? 'Edit Survey Form' : 'Create New Survey Form'}</CardTitle>
         <CardDescription className="text-sm">
           {mode === 'edit'
@@ -65,7 +65,7 @@ export function SurveyFormForm({ initialData, mode = 'create' }: SurveyFormFormP
             : 'Fill in the details to create a new survey form for food safety administration.'}
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
             <FormField

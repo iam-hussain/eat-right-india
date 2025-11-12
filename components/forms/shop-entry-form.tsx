@@ -143,8 +143,8 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
   ]
 
   return (
-    <Card className="w-full max-w-3xl mx-auto">
-      <CardHeader>
+    <Card className="w-full max-w-3xl mx-auto border-0 sm:border shadow-none sm:shadow">
+      <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-6">
         <CardTitle className="text-lg sm:text-xl">{mode === 'edit' ? 'Edit Shop Entry' : 'Create New Shop Entry'}</CardTitle>
         <CardDescription className="text-sm">
           {mode === 'edit'
@@ -152,7 +152,7 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
             : 'Fill in the details to add a new shop entry to the survey form.'}
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6 w-full">
             <FormField

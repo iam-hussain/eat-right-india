@@ -308,26 +308,27 @@ export default function UsersPage() {
 
   if (loading) {
     return (
-      <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4 overflow-x-hidden">
+      <div className="w-full max-w-7xl mx-auto sm:py-8 sm:px-4 overflow-x-hidden">
         <div className="text-center">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4 overflow-x-hidden">
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
+    <div className="w-full max-w-7xl mx-auto sm:py-8 sm:px-4 overflow-x-hidden">
+      <Card className="border-0 sm:border shadow-none sm:shadow">
+        <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <CardTitle>Users</CardTitle>
-              <CardDescription>Manage surveyors and their permissions</CardDescription>
+              <CardTitle className="text-lg sm:text-xl">User Management</CardTitle>
+              <CardDescription className="text-sm">Manage users, permissions, and access</CardDescription>
             </div>
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="w-full sm:w-auto">
                   <Plus className="mr-2 h-4 w-4" />
-                  Create User
+                  <span className="hidden sm:inline">Create User</span>
+                  <span className="sm:hidden">Create</span>
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -365,7 +366,7 @@ export default function UsersPage() {
             </Dialog>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
           <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4">
             <Input
               placeholder="Search all columns..."
