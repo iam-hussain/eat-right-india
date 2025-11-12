@@ -42,7 +42,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Plus, Edit, Trash2, Filter, Download, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Edit, Trash2, Filter, Download, ArrowUpDown, ChevronDown, ChevronUp, Eye } from 'lucide-react'
 import { exportToCSV, exportToExcel } from '@/lib/export-utils'
 import { Label } from '@/components/ui/label'
 
@@ -164,7 +164,14 @@ export default function ShopEntriesPage() {
               </Button>
             )
           },
-          cell: ({ row }) => <div className="pl-[15px] font-medium min-w-[120px] sm:min-w-[150px]">{row.getValue('shopName')}</div>,
+          cell: ({ row }) => (
+            <Link
+              href={`/entries/${row.original.id}`}
+              className="pl-[15px] font-medium min-w-[120px] sm:min-w-[150px] text-primary hover:underline"
+            >
+              {row.getValue('shopName')}
+            </Link>
+          ),
           size: 150,
           minSize: 120,
         },
@@ -524,7 +531,12 @@ export default function ShopEntriesPage() {
         cell: ({ row }) => {
           const entry = row.original
           return (
-            <div className="flex gap-2 min-w-[100px] sm:min-w-[120px]">
+            <div className="flex gap-2 min-w-[140px] sm:min-w-[160px]">
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/entries/${entry.id}`}>
+                  <Eye className="h-4 w-4" />
+                </Link>
+              </Button>
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/entries/${entry.id}/edit`}>
                   <Edit className="h-4 w-4" />
@@ -543,8 +555,8 @@ export default function ShopEntriesPage() {
             </div>
           )
         },
-        size: 120,
-        minSize: 100,
+        size: 160,
+        minSize: 140,
       }
       )
 
