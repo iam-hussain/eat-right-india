@@ -42,6 +42,7 @@ export function ShopEntryForm() {
     resolver: zodResolver(shopEntrySchema) as any,
     defaultValues: {
       surveyFormId: '',
+      surveyDate: new Date(),
       shopName: '',
       shopAddress: '',
       phoneNumber: '',
@@ -157,6 +158,31 @@ export function ShopEntryForm() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="surveyDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Survey Date (கணக்கெடுப்பு நாள்) *</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      {...field}
+                      value={
+                        field.value
+                          ? new Date(field.value).toISOString().split('T')[0]
+                          : ''
+                      }
+                      onChange={(e) => {
+                        field.onChange(e.target.value ? new Date(e.target.value) : new Date())
+                      }}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

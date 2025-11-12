@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import Image from 'next/image'
+import Link from 'next/link'
 import { surveyorLoginSchema, type SurveyorLoginInput } from '@/lib/zod-schemas'
 import { login } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'
@@ -45,14 +46,16 @@ export default function LoginPage() {
     <div className="container mx-auto flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center justify-center space-y-4">
-          <Image
-            src="/eat-right-india.svg"
-            alt="Eat Right India"
-            width={400}
-            height={200}
-            priority
-            className="w-full max-w-md"
-          />
+          <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
+            <Image
+              src="/eat-right-india.svg"
+              alt="Eat Right India"
+              width={400}
+              height={200}
+              priority
+              className="w-full max-w-md"
+            />
+          </Link>
         </div>
         <Card>
           <CardHeader>

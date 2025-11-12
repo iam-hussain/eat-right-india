@@ -37,9 +37,8 @@ export type SurveyFormInput = z.infer<typeof surveyFormSchema>
 export const shopEntrySchema = z
   .object({
     surveyFormId: z.string().min(1, 'Survey form is required'),
-    surveyDate: z.coerce.date({
-      required_error: 'Survey date is required',
-      invalid_type_error: 'Invalid date format',
+    surveyDate: z.coerce.date().refine((date) => date instanceof Date && !isNaN(date.getTime()), {
+      message: 'Invalid date format',
     }),
     shopName: z.string().min(1, 'Shop name is required'),
     shopAddress: z.string().min(1, 'Shop address is required'),
