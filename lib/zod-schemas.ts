@@ -83,7 +83,8 @@ export type ShopEntryInput = z.infer<typeof shopEntrySchema>
 
 // Surveyor Schema
 export const surveyorSchema = z.object({
-  name: z.string().min(1, 'Surveyor name is required'),
+  username: z.string().min(1, 'Username is required'),
+  displayName: z.string().min(1, 'Display name is required'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   isAdmin: z.boolean().default(false),
 })
@@ -92,7 +93,7 @@ export type SurveyorInput = z.infer<typeof surveyorSchema>
 
 // Surveyor Login Schema
 export const surveyorLoginSchema = z.object({
-  name: z.string().min(1, 'Surveyor name is required'),
+  username: z.string().min(1, 'Username is required'),
   password: z.string().min(1, 'Password is required'),
 })
 
