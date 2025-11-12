@@ -7,7 +7,7 @@ const key = new TextEncoder().encode(secretKey)
 
 export interface SessionData extends JWTPayload {
   userId: string
-  name: string
+  displayName: string
   isAdmin: boolean
   isSuperAdmin: boolean
 }
@@ -30,9 +30,9 @@ export async function decrypt(session: string | undefined = undefined) {
   }
 }
 
-export async function createSession(userId: string, name: string, isAdmin: boolean, isSuperAdmin: boolean) {
+export async function createSession(userId: string, displayName: string, isAdmin: boolean, isSuperAdmin: boolean) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-  const session = await encrypt({ userId, name, isAdmin, isSuperAdmin })
+  const session = await encrypt({ userId, displayName, isAdmin, isSuperAdmin })
 
   const cookieStore = await cookies()
   cookieStore.set('session', session, {
@@ -98,7 +98,8 @@ export async function ensureSuperAdmin() {
       
       await prisma.surveyor.create({
         data: {
-          name: 'superadmin',
+          username: 'superadmin',
+          displayName: 'Super Admin',
           password: defaultPassword,
           isSuperAdmin: true,
           isAdmin: true,

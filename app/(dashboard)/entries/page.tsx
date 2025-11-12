@@ -67,7 +67,7 @@ type ShopEntry = {
   }
   surveyor: {
     id: string
-    name: string
+    displayName: string
   } | null
 }
 
@@ -242,11 +242,11 @@ export default function ShopEntriesPage() {
         },
       },
       {
-        accessorKey: 'surveyor.name',
+        accessorKey: 'surveyor.displayName',
         header: 'Surveyor',
         cell: ({ row }) => {
           const surveyor = row.original.surveyor
-          return <div>{surveyor?.name || '-'}</div>
+          return <div>{surveyor?.displayName || '-'}</div>
         },
       },
       {
@@ -374,7 +374,7 @@ export default function ShopEntriesPage() {
                       >
                         {column.id === 'surveyForm'
                           ? 'Survey Form'
-                          : column.id === 'surveyor.name'
+                          : column.id === 'surveyor.displayName'
                             ? 'Surveyor'
                             : column.id}
                       </DropdownMenuCheckboxItem>

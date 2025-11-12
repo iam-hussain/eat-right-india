@@ -25,13 +25,13 @@ export default function LoginPage() {
   const form = useForm<SurveyorLoginInput>({
     resolver: zodResolver(surveyorLoginSchema),
     defaultValues: {
-      name: '',
+      username: '',
       password: '',
     },
   })
 
   const onSubmit = async (data: SurveyorLoginInput) => {
-    const result = await login(data.name, data.password)
+    const result = await login(data.username, data.password)
 
     if (result.success) {
       toast.success('Login successful!')
@@ -69,12 +69,12 @@ export default function LoginPage() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel>Username</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter your name" {...field} />
+                        <Input placeholder="Enter your username" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

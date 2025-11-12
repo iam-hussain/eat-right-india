@@ -120,7 +120,7 @@ export async function getShopEntries() {
         surveyor: {
           select: {
             id: true,
-            name: true,
+            displayName: true,
           },
         },
       },
@@ -151,7 +151,7 @@ export async function getShopEntry(id: string) {
         surveyor: {
           select: {
             id: true,
-            name: true,
+            displayName: true,
           },
         },
       },

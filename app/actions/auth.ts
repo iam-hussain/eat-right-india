@@ -9,7 +9,7 @@ export type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: string }
 
-export async function login(name: string, password: string): Promise<ActionResult<{ name: string }>> {
+export async function login(username: string, password: string): Promise<ActionResult<{ displayName: string }>> {
   try {
     // Ensure super admin exists
     await ensureSuperAdmin()
@@ -24,13 +24,13 @@ export async function login(name: string, password: string): Promise<ActionResul
     }
 
     const surveyor = await prisma.surveyor.findUnique({
-      where: { name },
+      where: { username },
     })
 
     if (!surveyor) {
       return {
         success: false,
-        error: 'Invalid name or password',
+        error: 'Invalid username or password',
       }
     }
 
@@ -46,15 +46,15 @@ export async function login(name: string, password: string): Promise<ActionResul
     if (!isValidPassword) {
       return {
         success: false,
-        error: 'Invalid name or password',
+        error: 'Invalid username or password',
       }
     }
 
-    await createSession(surveyor.id, surveyor.name, surveyor.isAdmin, surveyor.isSuperAdmin)
+    await createSession(surveyor.id, surveyor.displayName, surveyor.isAdmin, surveyor.isSuperAdmin)
 
     return {
       success: true,
-      data: { name: surveyor.name },
+      data: { displayName: surveyor.displayName },
     }
   } catch (error) {
     console.error('Error logging in:', error)

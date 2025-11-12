@@ -21,7 +21,8 @@ export async function Header() {
   }
 
   // Get user initials
-  const initials = session.name
+  const displayName = String(session.displayName || 'User')
+  const initials = displayName
     .split(' ')
     .map((n) => n[0])
     .join('')
@@ -58,7 +59,7 @@ export async function Header() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{session.name}</p>
+                  <p className="text-sm font-medium leading-none">{displayName}</p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {session.isSuperAdmin
                       ? 'Super Admin'

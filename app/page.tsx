@@ -39,7 +39,7 @@ export default async function Home() {
         {/* Welcome Message */}
         {session ? (
           <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold">Welcome, {session.name}!</h1>
+            <h1 className="text-3xl font-bold">Welcome, {session.displayName || 'User'}!</h1>
             <p className="text-muted-foreground">
               {session.isSuperAdmin
                 ? 'Super Admin Dashboard'

@@ -43,7 +43,8 @@ enum LicenseType {
 // Surveyor Model - Authentication and access control
 model Surveyor {
   id           String      @id @default(auto()) @map("_id") @db.ObjectId
-  name         String      @unique // கணக்கெடுப்பாளரின் பெயர் (Surveyor's Name)
+  username     String      @unique // Username for login (unique)
+  displayName  String // கணக்கெடுப்பாளரின் பெயர் (Surveyor's Display Name)
   password     String // Password for authentication (should be hashed)
   isAdmin      Boolean     @default(false) // Admin can create/update SurveyForm
   isSuperAdmin Boolean     @default(false) // Super admin can manage all users

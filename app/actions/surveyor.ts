@@ -20,13 +20,13 @@ export async function createSurveyor(
 
     // Check if surveyor already exists
     const existingSurveyor = await prisma.surveyor.findUnique({
-      where: { name: validatedData.name },
+      where: { username: validatedData.username },
     })
 
     if (existingSurveyor) {
       return {
         success: false,
-        error: 'Surveyor with this name already exists',
+        error: 'Surveyor with this username already exists',
       }
     }
 
@@ -35,7 +35,8 @@ export async function createSurveyor(
 
     const surveyor = await prisma.surveyor.create({
       data: {
-        name: validatedData.name,
+        username: validatedData.username,
+        displayName: validatedData.displayName,
         password: hashedPassword,
         isAdmin: validatedData.isAdmin || false,
         isSuperAdmin: false, // Only existing super admin can create, but not new super admins
@@ -189,7 +190,8 @@ export async function getSurveyors() {
       },
       select: {
         id: true,
-        name: true,
+        username: true,
+        displayName: true,
         isAdmin: true,
         isSuperAdmin: true,
         isActive: true,
@@ -205,18 +207,18 @@ export async function getSurveyors() {
 }
 
 export async function authenticateSurveyor(
-  name: string,
+  username: string,
   password: string
-): Promise<ActionResult<{ id: string; name: string }>> {
+): Promise<ActionResult<{ id: string; displayName: string }>> {
   try {
     const surveyor = await prisma.surveyor.findUnique({
-      where: { name },
+      where: { username },
     })
 
     if (!surveyor || !surveyor.isActive) {
       return {
         success: false,
-        error: 'Invalid name or password',
+        error: 'Invalid username or password',
       }
     }
 
@@ -225,13 +227,13 @@ export async function authenticateSurveyor(
     if (!isValidPassword) {
       return {
         success: false,
-        error: 'Invalid name or password',
+        error: 'Invalid username or password',
       }
     }
 
     return {
       success: true,
-      data: { id: surveyor.id, name: surveyor.name },
+      data: { id: surveyor.id, displayName: surveyor.displayName },
     }
   } catch (error) {
     console.error('Error authenticating surveyor:', error)
