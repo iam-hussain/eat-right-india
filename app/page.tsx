@@ -22,16 +22,16 @@ export default async function Home() {
   const session = await getSession()
 
   return (
-    <div className="container mx-auto min-h-screen px-4 py-8">
-      <div className="flex flex-col items-center justify-center space-y-8">
+    <div className="w-full max-w-7xl mx-auto px-4 py-4 sm:py-8 overflow-x-hidden">
+      <div className="flex flex-col items-center space-y-4 sm:space-y-8">
         {/* Logo */}
         <div className="flex flex-col items-center justify-center space-y-4">
-          <Image
+        <Image
             src="/eat-right-india.svg"
             alt="Eat Right India"
             width={600}
             height={300}
-            priority
+          priority
             className="w-full max-w-2xl"
           />
         </div>
@@ -94,10 +94,10 @@ export default async function Home() {
                 }
                 
                 const cardCount = actionCards.length
-                const gridCols = cardCount === 1 ? 'grid-cols-1 max-w-md' : cardCount === 2 ? 'md:grid-cols-2 max-w-2xl' : 'md:grid-cols-2 lg:grid-cols-3 max-w-5xl'
+                const gridCols = cardCount === 1 ? 'max-w-md' : cardCount === 2 ? 'md:grid-cols-2 max-w-2xl' : 'md:grid-cols-2 lg:grid-cols-2 max-w-5xl'
                 
                 return (
-                  <div className={`grid grid-cols-1 ${gridCols} gap-6 place-items-center w-full`}>
+                  <div className={`grid grid-cols-1 ${gridCols} gap-6 w-full`}>
                     {/* Survey Form Card - Show if admin or super admin */}
                     {(session.isAdmin || session.isSuperAdmin) && (
                       <Card className="hover:shadow-lg transition-shadow w-full">
@@ -110,8 +110,8 @@ export default async function Home() {
                             Create and manage survey forms
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-2">
-                          <div className="space-y-2">
+                        <CardContent>
+                          <div className="space-y-2 flex flex-col gap-2">
                             <Link href="/survey">
                               <Button className="w-full" variant="outline">
                                 <FileText className="mr-2 h-4 w-4" />
@@ -142,7 +142,7 @@ export default async function Home() {
                           </CardDescription>
                         </CardHeader>
                       <CardContent>
-                        <div className="space-y-2">
+                        <div className="space-y-2 flex flex-col gap-2">
                           <Link href="/entries">
                             <Button className="w-full" variant="outline">
                               <ShoppingBag className="mr-2 h-4 w-4" />
@@ -162,7 +162,8 @@ export default async function Home() {
 
                     {/* User Management Card - Show if super admin */}
                     {session.isSuperAdmin && (
-                      <Card className="hover:shadow-lg transition-shadow w-full">
+                      <div className='w-full md:col-span-2'>
+                        <Card className="hover:shadow-lg transition-shadow w-full max-w-xl mx-auto">
                         <CardHeader>
                           <div className="flex items-center gap-2">
                             <Users className="h-5 w-5 text-primary" />
@@ -181,6 +182,7 @@ export default async function Home() {
                           </Link>
                         </CardContent>
                       </Card>
+                      </div>
                     )}
                   </div>
                 )
@@ -216,7 +218,7 @@ export default async function Home() {
             </p>
           </div>
         )}
-      </div>
+        </div>
     </div>
   )
 }

@@ -190,14 +190,14 @@ export default function SurveyFormsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-8 px-4">
+      <div className="w-full max-w-7xl mx-auto py-8 px-4 overflow-x-hidden">
         <div className="text-center">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="w-full max-w-7xl mx-auto py-8 px-4 overflow-x-hidden">
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">

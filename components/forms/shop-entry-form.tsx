@@ -148,12 +148,12 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">
             <FormField
               control={form.control}
               name="surveyFormId"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="w-full">
                   <FormLabel>Survey Form *</FormLabel>
                   <Select
                     onValueChange={field.onChange}
@@ -161,7 +161,7 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
                     disabled={loadingForms}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a survey form" />
                       </SelectTrigger>
                     </FormControl>
@@ -180,40 +180,42 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="surveyDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Survey Date (கணக்கெடுப்பு நாள்) *</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      {...field}
-                      value={
-                        field.value
-                          ? new Date(field.value).toISOString().split('T')[0]
-                          : ''
-                      }
-                      onChange={(e) => {
-                        field.onChange(e.target.value ? new Date(e.target.value) : new Date())
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="surveyDate"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Survey Date (கணக்கெடுப்பு நாள்) *</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        className="w-full"
+                        {...field}
+                        value={
+                          field.value
+                            ? new Date(field.value).toISOString().split('T')[0]
+                            : ''
+                        }
+                        onChange={(e) => {
+                          field.onChange(e.target.value ? new Date(e.target.value) : new Date())
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="shopType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Shop Type (கடையின் வகை) *</FormLabel>
+              <FormField
+                control={form.control}
+                name="shopType"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Shop Type (கடையின் வகை) *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select shop type" />
                         </SelectTrigger>
                       </FormControl>
@@ -229,43 +231,46 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
                   </FormItem>
                 )}
               />
+            </div>
 
-            <FormField
-              control={form.control}
-              name="shopName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Shop Name (கடையின் பெயர்) *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter shop name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="shopName"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Shop Name (கடையின் பெயர்) *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter shop name" className="w-full" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Phone Number (தொலைபேசி எண்)</FormLabel>
+                    <FormControl>
+                      <Input type="tel" placeholder="Enter phone number" className="w-full" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
               name="shopAddress"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="w-full">
                   <FormLabel>Shop Address (முகவரி) *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter shop address" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="phoneNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone Number (தொலைபேசி எண்)</FormLabel>
-                  <FormControl>
-                    <Input type="tel" placeholder="Enter phone number" {...field} />
+                    <Input placeholder="Enter shop address" className="w-full" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -276,11 +281,11 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
               control={form.control}
               name="hasLicense"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="w-full">
                   <FormLabel>Has License (உரிமம் சான்று) *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select option" />
                       </SelectTrigger>
                     </FormControl>
@@ -300,10 +305,10 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
                   control={form.control}
                   name="licenseNumber"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="w-full">
                       <FormLabel>License Number (உரிமம் எண்) *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter license number" {...field} />
+                        <Input placeholder="Enter license number" className="w-full" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -315,14 +320,14 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
                     control={form.control}
                     name="licenseType"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="w-full">
                         <FormLabel>License Type (உரிமம் சான்றின் வகை) *</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value || ''}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select license type" />
                             </SelectTrigger>
                           </FormControl>
@@ -343,11 +348,12 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
                     control={form.control}
                     name="licenseExpiryDate"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="w-full">
                         <FormLabel>License Expiry Date (உரிமம் முடிவடையும் காலம்)</FormLabel>
                         <FormControl>
                           <Input
                             type="date"
+                            className="w-full"
                             {...field}
                             value={
                               field.value
@@ -371,13 +377,13 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
               control={form.control}
               name="fostacTraining"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="w-full">
                   <FormLabel>
                     FOSTAC Training Participation (பயிற்சியில் பங்குபெற்றவரா) *
                   </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select option" />
                       </SelectTrigger>
                     </FormControl>
@@ -395,17 +401,17 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
               control={form.control}
               name="remarks"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="w-full">
                   <FormLabel>Remarks (குறிப்பு)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter any remarks" {...field} />
+                    <Input placeholder="Enter any remarks" className="w-full" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Button type="submit" className="flex-1" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting
                   ? mode === 'edit'
@@ -420,6 +426,7 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
                 variant="outline"
                 onClick={() => form.reset()}
                 disabled={form.formState.isSubmitting}
+                className="sm:w-auto w-full"
               >
                 Reset
               </Button>

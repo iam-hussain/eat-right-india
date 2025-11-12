@@ -8,7 +8,7 @@ export default function DashboardLayout({
   return (
     <>
       <Header />
-      <main className="min-h-screen">{children}</main>
+      <main className="w-full overflow-x-hidden">{children}</main>
     </>
   )
 }
