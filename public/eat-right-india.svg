@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" aria-label="Eat Right India vector">
+  <defs>
+    <style>
+      .title { font-family: "Merriweather", serif; font-weight: 700; }
+      .india { fill: #1976d2; }
+      .right { fill: #2e7d32; }
+      .hindi { font-family: "Noto Sans Devanagari", sans-serif; fill: #a33d1f; }
+    </style>
+  </defs>
+
+  <!-- Centered container -->
+  <g transform="translate(150,0)">
+    <!-- Emblem ring (vector arcs) -->
+    <g>
+      <path d="M 420.869,165.015 A 210.000,210.000 0 0 1 296.466,506.810 L 280.838,418.177 A 120.000,120.000 0 0 0 351.925,222.865 Z" fill="#2e7d32" stroke="white" stroke-width="16"/>
+      <path d="M 296.466,506.810 A 210.000,210.000 0 0 1 50.799,318.303 L 140.457,310.459 A 120.000,120.000 0 0 0 280.838,418.177 Z" fill="#1976d2" stroke="white" stroke-width="16"/>
+      <path d="M 50.799,318.303 A 210.000,210.000 0 0 1 171.250,109.675 L 209.286,191.243 A 120.000,120.000 0 0 0 140.457,310.459 Z" fill="#ef6c00" stroke="white" stroke-width="16"/>
+      <path d="M 171.250,109.675 A 210.000,210.000 0 0 1 457.335,371.824 L 372.763,341.042 A 120.000,120.000 0 0 0 209.286,191.243 Z" fill="#fbc02d" stroke="white" stroke-width="16"/>
+      <circle cx="260" cy="300" r="110.4" fill="white"/>
+      <path d="M 254,350 L 266,350 L 270,380 L 250,380 Z" fill="#8d6e63" />
+      <path d="M 250,345 C 210,305 225,265 265,245 C 305,275 295,315 260,345 Z" fill="#43a047" />
+      <path d="M 257,260 C 262,295 255,320 256,342" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" />
+    </g>
+
+    <!-- Title - with more spacing from emblem -->
+    <g>
+      <text x="500" y="280" class="title right" font-size="84">Eat Right</text>
+      <text x="500" y="360" class="title india" font-size="84">India</text>
+      <text x="504" y="425" class="hindi" font-size="34">सही भोजन. बेहतर जीवन.</text>
+    </g>
+  </g>
+</svg>

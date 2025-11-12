@@ -1,65 +1,206 @@
-import Image from "next/image";
+import Image from 'next/image'
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { getSession } from '@/lib/auth'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { LogIn, FileText, Users, ShoppingBag, LogOut } from 'lucide-react'
+import { logout } from '@/app/actions/auth'
 
-export default function Home() {
+async function LogoutButton() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <form action={logout}>
+      <Button type="submit" variant="outline" className="w-full">
+        <LogOut className="mr-2 h-4 w-4" />
+        Logout
+      </Button>
+    </form>
+  )
+}
+
+export default async function Home() {
+  const session = await getSession()
+
+  return (
+    <div className="container mx-auto min-h-screen px-4 py-8">
+      <div className="flex flex-col items-center justify-center space-y-8">
+        {/* Logo */}
+        <div className="flex flex-col items-center justify-center space-y-4">
+          <Image
+            src="/eat-right-india.svg"
+            alt="Eat Right India"
+            width={600}
+            height={300}
+            priority
+            className="w-full max-w-2xl"
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+
+        {/* Welcome Message */}
+        {session ? (
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-bold">Welcome, {session.name}!</h1>
+            <p className="text-muted-foreground">
+              {session.isSuperAdmin
+                ? 'Super Admin Dashboard'
+                : session.isAdmin
+                  ? 'Admin Dashboard'
+                  : 'Surveyor Dashboard'}
+            </p>
+          </div>
+        ) : (
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-bold">Eat Right India</h1>
+            <p className="text-muted-foreground">
+              Food Safety and Drug Administration Department
+            </p>
+          </div>
+        )}
+
+        {/* Login Action - Centered (only when not logged in) */}
+        {!session && (
+          <div className="flex justify-center w-full">
+            <Card className="hover:shadow-lg transition-shadow w-full max-w-md">
+              <CardDescription className="text-center">
+                Access the system with your credentials
+              </CardDescription>
+              <CardContent>
+                <Link href="/login">
+                  <Button className="w-full">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Login
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Action Cards */}
+        {session && (
+          <>
+            <div className="flex justify-center w-full">
+              {(() => {
+                const actionCards = []
+                
+                if (session.isAdmin || session.isSuperAdmin) {
+                  actionCards.push('survey')
+                }
+                if (session) {
+                  actionCards.push('shop')
+                }
+                if (session.isSuperAdmin) {
+                  actionCards.push('users')
+                }
+                
+                const cardCount = actionCards.length
+                const gridCols = cardCount === 1 ? 'grid-cols-1 max-w-md' : cardCount === 2 ? 'md:grid-cols-2 max-w-2xl' : 'md:grid-cols-2 lg:grid-cols-3 max-w-5xl'
+                
+                return (
+                  <div className={`grid grid-cols-1 ${gridCols} gap-6 place-items-center w-full`}>
+                    {/* Survey Form Card - Show if admin or super admin */}
+                    {(session.isAdmin || session.isSuperAdmin) && (
+                      <Card className="hover:shadow-lg transition-shadow w-full">
+                        <CardHeader>
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-5 w-5 text-primary" />
+                            <CardTitle>Survey Forms</CardTitle>
+                          </div>
+                          <CardDescription>
+                            Create and manage survey forms
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          <Link href="/survey/new">
+                            <Button className="w-full">
+                              <FileText className="mr-2 h-4 w-4" />
+                              Create Survey Form
+                            </Button>
+                          </Link>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Shop Entry Card - Show if logged in */}
+                    {session && (
+                      <Card className="hover:shadow-lg transition-shadow w-full">
+                        <CardHeader>
+                          <div className="flex items-center gap-2">
+                            <ShoppingBag className="h-5 w-5 text-primary" />
+                            <CardTitle>Shop Entries</CardTitle>
+                          </div>
+                          <CardDescription>
+                            Add and manage shop entries
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <Link href="/entries/new">
+                            <Button className="w-full">
+                              <ShoppingBag className="mr-2 h-4 w-4" />
+                              Create Shop Entry
+                            </Button>
+                          </Link>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* User Management Card - Show if super admin */}
+                    {session.isSuperAdmin && (
+                      <Card className="hover:shadow-lg transition-shadow w-full">
+                        <CardHeader>
+                          <div className="flex items-center gap-2">
+                            <Users className="h-5 w-5 text-primary" />
+                            <CardTitle>User Management</CardTitle>
+                          </div>
+                          <CardDescription>
+                            Manage users, permissions, and access
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <Link href="/admin/users">
+                            <Button className="w-full">
+                              <Users className="mr-2 h-4 w-4" />
+                              Manage Users
+                            </Button>
+                          </Link>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                )
+              })()}
+            </div>
+
+            {/* Logout Card - Below other actions */}
+            <div className="flex justify-center w-full">
+              <Card className="hover:shadow-lg transition-shadow w-full max-w-md">
+                <CardHeader>
+                  <div className="flex items-center justify-center gap-2">
+                    <LogOut className="h-5 w-5 text-primary" />
+                    <CardTitle>Account</CardTitle>
+                  </div>
+                  <CardDescription className="text-center">
+                    Logout from your account
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <LogoutButton />
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
+
+        {/* Additional Info */}
+        {!session && (
+          <div className="text-center text-sm text-muted-foreground max-w-2xl">
+            <p>
+              Please login to access the Food Safety Administration system.
+              Contact your administrator if you need access.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
-  );
+  )
 }

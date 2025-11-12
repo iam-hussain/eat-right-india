@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum ShopType {
+  RESTAURANT
+  BAKERY
+  SWEET_SHOP
+  GROCERY_STORE
+  MEAT_SHOP
+  DAIRY_SHOP
+  BEVERAGE_SHOP
+  FOOD_PROCESSING_UNIT
+  CATERING_SERVICE
+  OTHER
+}
+
+enum YesNo {
+  YES
+  NO
+}
+
+enum LicenseType {
+  BASIC_REGISTRATION
+  STATE_LICENSE
+  CENTRAL_LICENSE
+  TEMPORARY_LICENSE
+  OTHER
+}
+
+// Surveyor Model - Authentication and access control
+model Surveyor {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  name         String      @unique // கணக்கெடுப்பாளரின் பெயர் (Surveyor's Name)
+  password     String // Password for authentication (should be hashed)
+  isAdmin      Boolean     @default(false) // Admin can create/update SurveyForm
+  isSuperAdmin Boolean     @default(false) // Super admin can manage all users
+  isActive     Boolean     @default(true) // Active status
+  shopEntries  ShopEntry[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@map("surveyors")
+}
+
+// Survey Form Model - Header information
+model SurveyForm {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  district    String // மாவட்டம் (District)
+  taluk       String? // வட்டம் (Taluk/Block)
+  village     String? // கிராமம் (Village)
+  shopEntries ShopEntry[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("survey_forms")
+}
+
+// Shop Entry Model - Table row data
+model ShopEntry {
+  id                String       @id @default(auto()) @map("_id") @db.ObjectId
+  surveyFormId      String       @db.ObjectId
+  surveyForm        SurveyForm   @relation(fields: [surveyFormId], references: [id], onDelete: Cascade)
+  surveyorId        String?      @db.ObjectId // Reference to surveyor who created/edits this entry
+  surveyor          Surveyor?    @relation(fields: [surveyorId], references: [id])
+  surveyDate        DateTime // கணக்கெடுப்பு நாள் (Survey Date)
+  shopName          String // கடையின் பெயர் (Shop Name)
+  shopAddress       String // முகவரி (Address)
+  phoneNumber       String? // தொலைபேசி எண் (Phone Number)
+  shopType          ShopType // கடையின் வகை (Shop Type)
+  hasLicense        YesNo // உரிமம் சான்று (License Certificate)
+  licenseNumber     String?      @unique // உரிமம் எண் (License Number) - Unique
+  licenseExpiryDate DateTime? // உரிமம் முடிவடையும் காலம் (License Expiry Period)
+  fostacTraining    YesNo // (FOSTAC) பயிற்சியில் பங்குபெற்றவரா (FOSTAC Training Participation)
+  licenseType       LicenseType? // உரிமம் சான்றின் வகை (Type of License Certificate)
+  remarks           String? // குறிப்பு (Remarks)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([surveyFormId])
+  @@index([surveyorId])
+  @@map("shop_entries")
+}
