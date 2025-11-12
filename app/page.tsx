@@ -111,12 +111,20 @@ export default async function Home() {
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                          <Link href="/survey/new">
-                            <Button className="w-full">
-                              <FileText className="mr-2 h-4 w-4" />
-                              Create Survey Form
-                            </Button>
-                          </Link>
+                          <div className="space-y-2">
+                            <Link href="/survey">
+                              <Button className="w-full" variant="outline">
+                                <FileText className="mr-2 h-4 w-4" />
+                                View All Survey Forms
+                              </Button>
+                            </Link>
+                            <Link href="/survey/new">
+                              <Button className="w-full">
+                                <FileText className="mr-2 h-4 w-4" />
+                                Create Survey Form
+                              </Button>
+                            </Link>
+                          </div>
                         </CardContent>
                       </Card>
                     )}
@@ -133,14 +141,22 @@ export default async function Home() {
                             Add and manage shop entries
                           </CardDescription>
                         </CardHeader>
-                        <CardContent>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <Link href="/entries">
+                            <Button className="w-full" variant="outline">
+                              <ShoppingBag className="mr-2 h-4 w-4" />
+                              View All Shop Entries
+                            </Button>
+                          </Link>
                           <Link href="/entries/new">
                             <Button className="w-full">
                               <ShoppingBag className="mr-2 h-4 w-4" />
                               Create Shop Entry
                             </Button>
                           </Link>
-                        </CardContent>
+                        </div>
+                      </CardContent>
                       </Card>
                     )}
 

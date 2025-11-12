@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose'
-import { prisma } from './prisma'
+import { prisma } from '@/db'
 
 const secretKey = process.env.AUTH_SECRET || 'your-secret-key-change-in-production'
 const key = new TextEncoder().encode(secretKey)

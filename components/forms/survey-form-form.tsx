@@ -1,10 +1,11 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { surveyFormSchema, type SurveyFormInput } from '@/lib/zod-schemas'
-import { createSurveyForm } from '@/app/actions/survey-form'
+import { createSurveyForm, updateSurveyForm } from '@/app/actions/survey-form'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -17,10 +18,16 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 
-export function SurveyFormForm() {
+type SurveyFormFormProps = {
+  initialData?: SurveyFormInput & { id?: string }
+  mode?: 'create' | 'edit'
+}
+
+export function SurveyFormForm({ initialData, mode = 'create' }: SurveyFormFormProps) {
+  const router = useRouter()
   const form = useForm<SurveyFormInput>({
     resolver: zodResolver(surveyFormSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       district: '',
       taluk: '',
       village: '',
@@ -28,24 +35,34 @@ export function SurveyFormForm() {
   })
 
   const onSubmit = async (data: SurveyFormInput) => {
-    const result = await createSurveyForm(data)
-
-    if (result.success) {
-      toast.success('Survey form created successfully!')
-      form.reset()
-      // Optionally redirect to a success page or survey list
-      // router.push(`/survey/${result.data.id}`)
+    if (mode === 'edit' && initialData?.id) {
+      const result = await updateSurveyForm(initialData.id, data)
+      if (result.success) {
+        toast.success('Survey form updated successfully!')
+        router.push('/survey')
+      } else {
+        toast.error(result.error || 'Failed to update survey form')
+      }
     } else {
-      toast.error(result.error || 'Failed to create survey form')
+      const result = await createSurveyForm(data)
+      if (result.success) {
+        toast.success('Survey form created successfully!')
+        form.reset()
+        router.push('/survey')
+      } else {
+        toast.error(result.error || 'Failed to create survey form')
+      }
     }
   }
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Create New Survey Form</CardTitle>
+        <CardTitle>{mode === 'edit' ? 'Edit Survey Form' : 'Create New Survey Form'}</CardTitle>
         <CardDescription>
-          Fill in the details to create a new survey form for food safety administration.
+          {mode === 'edit'
+            ? 'Update the details of the survey form.'
+            : 'Fill in the details to create a new survey form for food safety administration.'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -95,7 +112,13 @@ export function SurveyFormForm() {
 
             <div className="flex gap-4">
               <Button type="submit" className="flex-1" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Creating...' : 'Create Survey Form'}
+                {form.formState.isSubmitting
+                  ? mode === 'edit'
+                    ? 'Updating...'
+                    : 'Creating...'
+                  : mode === 'edit'
+                    ? 'Update Survey Form'
+                    : 'Create Survey Form'}
               </Button>
               <Button
                 type="button"

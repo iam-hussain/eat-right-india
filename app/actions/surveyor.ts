@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import bcrypt from 'bcryptjs'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/db'
 import { requireSuperAdmin, getSession } from '@/lib/auth'
 import { surveyorSchema, type SurveyorInput } from '@/lib/zod-schemas'
 

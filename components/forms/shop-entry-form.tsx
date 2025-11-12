@@ -1,11 +1,12 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { shopEntrySchema, type ShopEntryInput } from '@/lib/zod-schemas'
-import { createShopEntry } from '@/app/actions/shop-entry'
+import { createShopEntry, updateShopEntry } from '@/app/actions/shop-entry'
 import { getSurveyForms } from '@/app/actions/survey-form'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -34,13 +35,19 @@ type SurveyFormOption = {
   createdAt: Date
 }
 
-export function ShopEntryForm() {
+type ShopEntryFormProps = {
+  initialData?: ShopEntryInput & { id?: string }
+  mode?: 'create' | 'edit'
+}
+
+export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormProps) {
+  const router = useRouter()
   const [surveyForms, setSurveyForms] = useState<SurveyFormOption[]>([])
   const [loadingForms, setLoadingForms] = useState(true)
 
   const form = useForm<ShopEntryInput>({
     resolver: zodResolver(shopEntrySchema) as any,
-    defaultValues: {
+    defaultValues: initialData || {
       surveyFormId: '',
       surveyDate: new Date(),
       shopName: '',
@@ -88,15 +95,23 @@ export function ShopEntryForm() {
       remarks: data.remarks || undefined,
     }
 
-    const result = await createShopEntry(cleanedData)
-
-    if (result.success) {
-      toast.success('Shop entry created successfully!')
-      form.reset()
-      // Optionally redirect to a success page or entries list
-      // router.push(`/entries/${result.data.id}`)
+    if (mode === 'edit' && initialData?.id) {
+      const result = await updateShopEntry(initialData.id, cleanedData)
+      if (result.success) {
+        toast.success('Shop entry updated successfully!')
+        router.push('/entries')
+      } else {
+        toast.error(result.error || 'Failed to update shop entry')
+      }
     } else {
-      toast.error(result.error || 'Failed to create shop entry')
+      const result = await createShopEntry(cleanedData)
+      if (result.success) {
+        toast.success('Shop entry created successfully!')
+        form.reset()
+        router.push('/entries')
+      } else {
+        toast.error(result.error || 'Failed to create shop entry')
+      }
     }
   }
 
@@ -124,9 +139,11 @@ export function ShopEntryForm() {
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
-        <CardTitle>Create New Shop Entry</CardTitle>
+        <CardTitle>{mode === 'edit' ? 'Edit Shop Entry' : 'Create New Shop Entry'}</CardTitle>
         <CardDescription>
-          Fill in the details to add a new shop entry to the survey form.
+          {mode === 'edit'
+            ? 'Update the details of the shop entry.'
+            : 'Fill in the details to add a new shop entry to the survey form.'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -390,7 +407,13 @@ export function ShopEntryForm() {
 
             <div className="flex gap-4">
               <Button type="submit" className="flex-1" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Creating...' : 'Create Shop Entry'}
+                {form.formState.isSubmitting
+                  ? mode === 'edit'
+                    ? 'Updating...'
+                    : 'Creating...'
+                  : mode === 'edit'
+                    ? 'Update Shop Entry'
+                    : 'Create Shop Entry'}
               </Button>
               <Button
                 type="button"

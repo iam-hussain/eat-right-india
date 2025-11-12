@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import bcrypt from 'bcryptjs'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/db'
 import { createSession, deleteSession, ensureSuperAdmin } from '@/lib/auth'
 
 export type ActionResult<T> =
