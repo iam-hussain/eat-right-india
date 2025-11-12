@@ -308,14 +308,14 @@ export default function UsersPage() {
 
   if (loading) {
     return (
-      <div className="w-full max-w-7xl mx-auto py-8 px-4 overflow-x-hidden">
+      <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4 overflow-x-hidden">
         <div className="text-center">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-8 px-4 overflow-x-hidden">
+    <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4 overflow-x-hidden">
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
@@ -366,12 +366,12 @@ export default function UsersPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4">
             <Input
               placeholder="Search all columns..."
               value={globalFilter ?? ''}
               onChange={(e) => setGlobalFilter(e.target.value)}
-              className="max-w-sm"
+              className="flex-1 min-w-[150px] sm:max-w-sm"
             />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

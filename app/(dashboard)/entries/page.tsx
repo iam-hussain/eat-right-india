@@ -42,7 +42,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Plus, Edit, Trash2, Filter } from 'lucide-react'
+import { Plus, Edit, Trash2, Filter, Download, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react'
+import { exportToCSV, exportToExcel } from '@/lib/export-utils'
+import { Label } from '@/components/ui/label'
 
 type ShopEntry = {
   id: string
@@ -99,8 +101,17 @@ export default function ShopEntriesPage() {
     remarks: false,
     surveyor: false,
     createdAt: false,
+    district: false,
+    taluk: false,
+    village: false,
   })
   const [globalFilter, setGlobalFilter] = useState('')
+  const [surveyFormView, setSurveyFormView] = useState<'combined' | 'separate'>('combined')
+  const [dateFilterFrom, setDateFilterFrom] = useState('')
+  const [dateFilterTo, setDateFilterTo] = useState('')
+  const [licenseExpiryFrom, setLicenseExpiryFrom] = useState('')
+  const [licenseExpiryTo, setLicenseExpiryTo] = useState('')
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -137,132 +148,374 @@ export default function ShopEntriesPage() {
   }
 
   const columns = useMemo<ColumnDef<ShopEntry>[]>(
-    () => [
-      {
-        accessorKey: 'shopName',
-        header: 'Shop Name',
-        cell: ({ row }) => <div className="font-medium">{row.getValue('shopName')}</div>,
-      },
-      {
-        accessorKey: 'shopType',
-        header: 'Shop Type',
-        cell: ({ row }) => {
-          const type = row.getValue('shopType') as string
-          return <div>{shopTypeLabels[type] || type}</div>
+    () => {
+      const baseColumns: ColumnDef<ShopEntry>[] = [
+        {
+          accessorKey: 'shopName',
+          header: ({ column }) => {
+            return (
+              <Button
+                variant="ghost"
+                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                className="h-8 px-2"
+              >
+                Shop Name
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
+            )
+          },
+          cell: ({ row }) => <div className="font-medium min-w-[120px] sm:min-w-[150px]">{row.getValue('shopName')}</div>,
+          size: 150,
+          minSize: 120,
         },
-      },
-      {
-        id: 'surveyForm',
-        header: 'Survey Form',
-        cell: ({ row }) => {
-          const form = row.original.surveyForm
-          return (
-            <div className="min-w-[200px]">
-              <div className="font-medium">{form.district}</div>
-              {form.taluk && (
-                <div className="text-sm text-muted-foreground">Taluk: {form.taluk}</div>
-              )}
-              {form.village && (
-                <div className="text-sm text-muted-foreground">Village: {form.village}</div>
-              )}
-            </div>
-          )
+        {
+          accessorKey: 'shopType',
+          header: ({ column }) => {
+            return (
+              <Button
+                variant="ghost"
+                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                className="h-8 px-2"
+              >
+                Shop Type
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
+            )
+          },
+          cell: ({ row }) => {
+            const type = row.getValue('shopType') as string
+            return <div className="min-w-[100px] sm:min-w-[120px] whitespace-nowrap">{shopTypeLabels[type] || type}</div>
+          },
+          size: 120,
+          minSize: 100,
         },
+      ]
+
+      // Add Survey Form columns based on view mode
+      if (surveyFormView === 'combined') {
+        baseColumns.push(        {
+          id: 'surveyForm',
+          header: 'Survey Form',
+          cell: ({ row }) => {
+            const form = row.original.surveyForm
+            return (
+              <div className="min-w-[180px] sm:min-w-[220px]">
+                <div className="font-medium">{form.district}</div>
+                {form.taluk && (
+                  <div className="text-sm text-muted-foreground">Taluk: {form.taluk}</div>
+                )}
+                {form.village && (
+                  <div className="text-sm text-muted-foreground">Village: {form.village}</div>
+                )}
+              </div>
+            )
+          },
+          size: 220,
+          minSize: 180,
+        })
+      } else {
+        baseColumns.push(
+          {
+            accessorFn: (row) => row.surveyForm.district,
+            id: 'district',
+            header: ({ column }) => {
+              return (
+                <Button
+                  variant="ghost"
+                  onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                  className="h-8 px-2"
+                >
+                  District
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              )
+            },
+            cell: ({ row }) => <div className="min-w-[100px] sm:min-w-[120px]">{row.original.surveyForm.district}</div>,
+            size: 120,
+            minSize: 100,
+          },
+          {
+            accessorFn: (row) => row.surveyForm.taluk,
+            id: 'taluk',
+            header: ({ column }) => {
+              return (
+                <Button
+                  variant="ghost"
+                  onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                  className="h-8 px-2"
+                >
+                  Taluk
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              )
+            },
+            cell: ({ row }) => <div className="min-w-[100px] sm:min-w-[120px]">{row.original.surveyForm.taluk || '-'}</div>,
+            size: 120,
+            minSize: 100,
+          },
+          {
+            accessorFn: (row) => row.surveyForm.village,
+            id: 'village',
+            header: ({ column }) => {
+              return (
+                <Button
+                  variant="ghost"
+                  onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                  className="h-8 px-2"
+                >
+                  Village
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              )
+            },
+            cell: ({ row }) => <div className="min-w-[100px] sm:min-w-[120px]">{row.original.surveyForm.village || '-'}</div>,
+            size: 120,
+            minSize: 100,
+          }
+        )
+      }
+
+      // Add remaining columns
+      baseColumns.push(
+        {
+          accessorKey: 'shopAddress',
+          header: ({ column }) => {
+            return (
+              <Button
+                variant="ghost"
+                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                className="h-8 px-2"
+              >
+                Address
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
+            )
+          },
+          cell: ({ row }) => {
+            const address = row.getValue('shopAddress') as string
+            return <div className="min-w-[150px] sm:min-w-[200px] max-w-xs truncate">{address}</div>
+          },
+          size: 200,
+          minSize: 150,
       },
-      {
-        accessorKey: 'shopAddress',
-        header: 'Address',
-        cell: ({ row }) => {
-          const address = row.getValue('shopAddress') as string
-          return <div className="max-w-xs truncate">{address}</div>
+        {
+          accessorKey: 'phoneNumber',
+          header: 'Phone',
+          cell: ({ row }) => {
+            const phone = row.getValue('phoneNumber') as string | null
+            return <div className="min-w-[100px] sm:min-w-[120px] whitespace-nowrap">{phone || '-'}</div>
+          },
+          size: 120,
+          minSize: 100,
         },
-      },
-      {
-        accessorKey: 'phoneNumber',
-        header: 'Phone',
-        cell: ({ row }) => {
-          const phone = row.getValue('phoneNumber') as string | null
-          return <div>{phone || '-'}</div>
-        },
-      },
       {
         accessorKey: 'hasLicense',
-        header: 'Has License',
-        cell: ({ row }) => {
-          const hasLicense = row.getValue('hasLicense') as string
+        header: ({ column }) => {
           return (
-            <div className={hasLicense === 'YES' ? 'text-green-600' : 'text-gray-500'}>
-              {hasLicense}
-            </div>
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8 px-2"
+            >
+              Has License
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
           )
         },
+          cell: ({ row }) => {
+            const hasLicense = row.getValue('hasLicense') as string
+            return (
+              <div className={`min-w-[80px] sm:min-w-[100px] whitespace-nowrap ${hasLicense === 'YES' ? 'text-green-600' : 'text-gray-500'}`}>
+                {hasLicense}
+              </div>
+            )
+          },
+          size: 100,
+          minSize: 80,
       },
       {
         accessorKey: 'licenseNumber',
-        header: 'License Number',
-        cell: ({ row }) => {
-          const license = row.getValue('licenseNumber') as string | null
-          return <div>{license || '-'}</div>
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8 px-2"
+            >
+              License Number
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
         },
+          cell: ({ row }) => {
+            const license = row.getValue('licenseNumber') as string | null
+            return <div className="min-w-[120px] sm:min-w-[150px] whitespace-nowrap">{license || '-'}</div>
+          },
+          size: 150,
+          minSize: 120,
       },
       {
         accessorKey: 'licenseExpiryDate',
-        header: 'License Expiry',
-        cell: ({ row }) => {
-          const date = row.getValue('licenseExpiryDate') as Date | null
-          return <div>{date ? new Date(date).toLocaleDateString() : '-'}</div>
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8 px-2"
+            >
+              License Expiry
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
+          cell: ({ row }) => {
+            const date = row.getValue('licenseExpiryDate') as Date | null
+            return <div className="min-w-[110px] sm:min-w-[130px] whitespace-nowrap">{date ? new Date(date).toLocaleDateString() : '-'}</div>
+          },
+          size: 130,
+          minSize: 110,
+        sortingFn: (rowA, rowB) => {
+          const dateA = rowA.getValue('licenseExpiryDate') as Date | null
+          const dateB = rowB.getValue('licenseExpiryDate') as Date | null
+          if (!dateA && !dateB) return 0
+          if (!dateA) return 1
+          if (!dateB) return -1
+          return dateA.getTime() - dateB.getTime()
         },
       },
       {
         accessorKey: 'licenseType',
-        header: 'License Type',
-        cell: ({ row }) => {
-          const type = row.getValue('licenseType') as string | null
-          return <div>{type || '-'}</div>
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8 px-2"
+            >
+              License Type
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
         },
+          cell: ({ row }) => {
+            const type = row.getValue('licenseType') as string | null
+            return <div className="min-w-[120px] sm:min-w-[150px] whitespace-nowrap">{type || '-'}</div>
+          },
+          size: 150,
+          minSize: 120,
       },
       {
         accessorKey: 'fostacTraining',
-        header: 'FOSTAC',
-        cell: ({ row }) => {
-          const training = row.getValue('fostacTraining') as string
+        header: ({ column }) => {
           return (
-            <div className={training === 'YES' ? 'text-green-600' : 'text-gray-500'}>
-              {training}
-            </div>
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8 px-2"
+            >
+              FOSTAC
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
           )
         },
+          cell: ({ row }) => {
+            const training = row.getValue('fostacTraining') as string
+            return (
+              <div className={`min-w-[80px] sm:min-w-[100px] whitespace-nowrap ${training === 'YES' ? 'text-green-600' : 'text-gray-500'}`}>
+                {training}
+              </div>
+            )
+          },
+          size: 100,
+          minSize: 80,
       },
       {
         accessorKey: 'surveyDate',
-        header: 'Survey Date',
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8 px-2"
+            >
+              Survey Date & Time
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
         cell: ({ row }) => {
           const date = new Date(row.getValue('surveyDate'))
-          return <div>{date.toLocaleDateString()}</div>
+          return (
+            <div className="min-w-[140px] sm:min-w-[160px]">
+              <div className="whitespace-nowrap">{date.toLocaleDateString()}</div>
+              <div className="text-sm text-muted-foreground whitespace-nowrap">{date.toLocaleTimeString()}</div>
+            </div>
+          )
         },
+        sortingFn: (rowA, rowB) => {
+          const dateA = new Date(rowA.getValue('surveyDate') as Date)
+          const dateB = new Date(rowB.getValue('surveyDate') as Date)
+          return dateA.getTime() - dateB.getTime()
+        },
+        size: 160,
+        minSize: 140,
       },
       {
-        accessorKey: 'surveyor.displayName',
-        header: 'Surveyor',
-        cell: ({ row }) => {
-          const surveyor = row.original.surveyor
-          return <div>{surveyor?.displayName || '-'}</div>
+        accessorFn: (row) => row.surveyor?.displayName || '',
+        id: 'surveyor',
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8 px-2"
+            >
+              Surveyor
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
         },
+          cell: ({ row }) => {
+            const surveyor = row.original.surveyor
+            return <div className="min-w-[100px] sm:min-w-[120px] whitespace-nowrap">{surveyor?.displayName || '-'}</div>
+          },
+          size: 120,
+          minSize: 100,
       },
       {
         accessorKey: 'remarks',
         header: 'Remarks',
-        cell: ({ row }) => {
-          const remarks = row.getValue('remarks') as string | null
-          return <div className="max-w-xs truncate">{remarks || '-'}</div>
-        },
+          cell: ({ row }) => {
+            const remarks = row.getValue('remarks') as string | null
+            return <div className="min-w-[120px] sm:min-w-[150px] max-w-xs truncate">{remarks || '-'}</div>
+          },
+          size: 150,
+          minSize: 120,
       },
       {
         accessorKey: 'createdAt',
-        header: 'Created',
-        cell: ({ row }) => {
-          const date = new Date(row.getValue('createdAt'))
-          return <div>{date.toLocaleDateString()}</div>
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8 px-2"
+            >
+              Created
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
+          cell: ({ row }) => {
+            const date = new Date(row.getValue('createdAt'))
+            return <div className="min-w-[110px] sm:min-w-[130px] whitespace-nowrap">{date.toLocaleDateString()}</div>
+          },
+          size: 130,
+          minSize: 110,
+        sortingFn: (rowA, rowB) => {
+          const dateA = new Date(rowA.getValue('createdAt') as Date)
+          const dateB = new Date(rowB.getValue('createdAt') as Date)
+          return dateA.getTime() - dateB.getTime()
         },
       },
       {
@@ -271,7 +524,7 @@ export default function ShopEntriesPage() {
         cell: ({ row }) => {
           const entry = row.original
           return (
-            <div className="flex gap-2">
+            <div className="flex gap-2 min-w-[100px] sm:min-w-[120px]">
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/entries/${entry.id}/edit`}>
                   <Edit className="h-4 w-4" />
@@ -290,13 +543,114 @@ export default function ShopEntriesPage() {
             </div>
           )
         },
-      },
-    ],
-    []
+        size: 120,
+        minSize: 100,
+      }
+      )
+
+      return baseColumns
+    },
+    [surveyFormView]
   )
 
+  // Filter data based on date ranges
+  const filteredData = useMemo(() => {
+    let filtered = [...data]
+
+    // Filter by survey date range
+    if (dateFilterFrom || dateFilterTo) {
+      filtered = filtered.filter((entry) => {
+        const entryDate = new Date(entry.surveyDate)
+        const fromDate = dateFilterFrom ? new Date(dateFilterFrom) : null
+        const toDate = dateFilterTo ? new Date(dateFilterTo + 'T23:59:59') : null
+
+        if (fromDate && entryDate < fromDate) return false
+        if (toDate && entryDate > toDate) return false
+        return true
+      })
+    }
+
+    // Filter by license expiry date range
+    if (licenseExpiryFrom || licenseExpiryTo) {
+      filtered = filtered.filter((entry) => {
+        if (!entry.licenseExpiryDate) return false
+        const entryDate = new Date(entry.licenseExpiryDate)
+        const fromDate = licenseExpiryFrom ? new Date(licenseExpiryFrom) : null
+        const toDate = licenseExpiryTo ? new Date(licenseExpiryTo + 'T23:59:59') : null
+
+        if (fromDate && entryDate < fromDate) return false
+        if (toDate && entryDate > toDate) return false
+        return true
+      })
+    }
+
+    return filtered
+  }, [data, dateFilterFrom, dateFilterTo, licenseExpiryFrom, licenseExpiryTo])
+
+  const handleExportCSV = () => {
+    const visibleColumns = table
+      .getAllColumns()
+      .filter((col) => col.getIsVisible() && col.id !== 'actions')
+      .map((col) => {
+        const def = col.columnDef
+        return {
+          key: col.id,
+          header: typeof def.header === 'string' ? def.header : col.id,
+          accessor: (row: ShopEntry) => {
+            if (col.id === 'surveyForm') {
+              const form = row.surveyForm
+              return `${form.district}${form.taluk ? `, ${form.taluk}` : ''}${form.village ? `, ${form.village}` : ''}`
+            }
+            if (col.id === 'district') return row.surveyForm.district
+            if (col.id === 'taluk') return row.surveyForm.taluk || ''
+            if (col.id === 'village') return row.surveyForm.village || ''
+            if (col.id === 'surveyor') return row.surveyor?.displayName || ''
+            if (col.id === 'shopType') return shopTypeLabels[row.shopType] || row.shopType
+            const value = (row as any)[col.id]
+            if (value instanceof Date) return value.toLocaleString()
+            return value ?? ''
+          },
+        }
+      })
+
+    const rowsToExport = table.getRowModel().rows.map((row) => row.original)
+    exportToCSV(rowsToExport, visibleColumns, 'shop-entries')
+    toast.success('Exported to CSV successfully')
+  }
+
+  const handleExportExcel = () => {
+    const visibleColumns = table
+      .getAllColumns()
+      .filter((col) => col.getIsVisible() && col.id !== 'actions')
+      .map((col) => {
+        const def = col.columnDef
+        return {
+          key: col.id,
+          header: typeof def.header === 'string' ? def.header : col.id,
+          accessor: (row: ShopEntry) => {
+            if (col.id === 'surveyForm') {
+              const form = row.surveyForm
+              return `${form.district}${form.taluk ? `, ${form.taluk}` : ''}${form.village ? `, ${form.village}` : ''}`
+            }
+            if (col.id === 'district') return row.surveyForm.district
+            if (col.id === 'taluk') return row.surveyForm.taluk || ''
+            if (col.id === 'village') return row.surveyForm.village || ''
+            if (col.id === 'surveyor') return row.surveyor?.displayName || ''
+            if (col.id === 'shopType') return shopTypeLabels[row.shopType] || row.shopType
+            const value = (row as any)[col.id]
+            if (value instanceof Date) return value.toLocaleString()
+            return value ?? ''
+          },
+        }
+      })
+
+    const rowsToExport = table.getRowModel().rows.map((row) => row.original)
+    exportToExcel(rowsToExport, visibleColumns, 'shop-entries')
+    toast.success('Exported to Excel successfully')
+  }
+
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -322,66 +676,170 @@ export default function ShopEntriesPage() {
 
   if (loading) {
     return (
-      <div className="w-full max-w-7xl mx-auto py-8 px-4">
+      <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4">
         <div className="text-center">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-8 px-4 overflow-x-hidden">
+    <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4 overflow-x-hidden">
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <CardTitle>Shop Entries</CardTitle>
-              <CardDescription>Manage shop entries and their details</CardDescription>
+              <CardTitle className="text-lg sm:text-xl">Shop Entries</CardTitle>
+              <CardDescription className="text-sm">Manage shop entries and their details</CardDescription>
             </div>
-            <Button asChild>
+            <Button asChild className="w-full sm:w-auto">
               <Link href="/entries/new">
                 <Plus className="mr-2 h-4 w-4" />
-                Create Shop Entry
+                <span className="hidden sm:inline">Create Shop Entry</span>
+                <span className="sm:hidden">Create</span>
               </Link>
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4 mb-4">
-            <Input
-              placeholder="Search all columns..."
-              value={globalFilter ?? ''}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              className="max-w-sm"
-            />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <Filter className="mr-2 h-4 w-4" />
-                  Columns
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="max-h-96 overflow-y-auto">
-                {table
-                  .getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                      >
-                        {column.id === 'surveyForm'
-                          ? 'Survey Form'
-                          : column.id === 'surveyor.displayName'
-                            ? 'Surveyor'
-                            : column.id}
-                      </DropdownMenuCheckboxItem>
-                    )
-                  })}
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className="space-y-4 mb-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+              <Input
+                placeholder="Search all columns..."
+                value={globalFilter ?? ''}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                className="flex-1 min-w-[150px] sm:max-w-sm"
+              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    <Filter className="mr-2 h-4 w-4" />
+                    Columns
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="max-h-96 overflow-y-auto">
+                  {table
+                    .getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => {
+                      return (
+                        <DropdownMenuCheckboxItem
+                          key={column.id}
+                          className="capitalize"
+                          checked={column.getIsVisible()}
+                          onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                        >
+                          {column.id === 'surveyForm'
+                            ? 'Survey Form'
+                            : column.id === 'surveyor'
+                              ? 'Surveyor'
+                              : column.id}
+                        </DropdownMenuCheckboxItem>
+                      )
+                    })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    <Download className="mr-2 h-4 w-4" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuCheckboxItem onClick={handleExportCSV}>
+                    Export as CSV
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem onClick={handleExportExcel}>
+                    Export as Excel
+                  </DropdownMenuCheckboxItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className="w-full sm:w-auto"
+              >
+                {showAdvancedFilters ? (
+                  <>
+                    <ChevronUp className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">Hide Advanced Filters</span>
+                    <span className="sm:hidden">Hide Filters</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">Show Advanced Filters</span>
+                    <span className="sm:hidden">Show Filters</span>
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Advanced Filters Section */}
+            {showAdvancedFilters && (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 p-3 sm:p-4 border rounded-md bg-muted/50">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                    <Label htmlFor="survey-form-view" className="whitespace-nowrap text-sm">
+                      Survey Form View:
+                    </Label>
+                    <select
+                      id="survey-form-view"
+                      value={surveyFormView}
+                      onChange={(e) => setSurveyFormView(e.target.value as 'combined' | 'separate')}
+                      className="w-full sm:w-auto px-3 py-1.5 text-sm border rounded-md bg-background"
+                    >
+                      <option value="combined">Combined</option>
+                      <option value="separate">Separate Columns</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 p-3 sm:p-4 border rounded-md bg-muted/50">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="date-from" className="text-sm">Survey Date From</Label>
+                    <Input
+                      id="date-from"
+                      type="date"
+                      value={dateFilterFrom}
+                      onChange={(e) => setDateFilterFrom(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="date-to" className="text-sm">Survey Date To</Label>
+                    <Input
+                      id="date-to"
+                      type="date"
+                      value={dateFilterTo}
+                      onChange={(e) => setDateFilterTo(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="license-from" className="text-sm">License Expiry From</Label>
+                    <Input
+                      id="license-from"
+                      type="date"
+                      value={licenseExpiryFrom}
+                      onChange={(e) => setLicenseExpiryFrom(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="license-to" className="text-sm">License Expiry To</Label>
+                    <Input
+                      id="license-to"
+                      type="date"
+                      value={licenseExpiryTo}
+                      onChange={(e) => setLicenseExpiryTo(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="rounded-md border overflow-x-auto">
@@ -421,16 +879,20 @@ export default function ShopEntriesPage() {
             </Table>
           </div>
 
-          <div className="flex items-center justify-between mt-4">
-            <div className="text-sm text-muted-foreground">
-              Showing {table.getRowModel().rows.length} of {data.length} entries
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mt-4">
+            <div className="text-xs sm:text-sm text-muted-foreground">
+              Showing {table.getRowModel().rows.length} of {filteredData.length} entries
+              {filteredData.length !== data.length && (
+                <span className="hidden sm:inline"> (filtered from {data.length} total)</span>
+              )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
+                className="flex-1 sm:flex-initial"
               >
                 Previous
               </Button>
@@ -439,6 +901,7 @@ export default function ShopEntriesPage() {
                 size="sm"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
+                className="flex-1 sm:flex-initial"
               >
                 Next
               </Button>

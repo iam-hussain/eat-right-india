@@ -58,8 +58,8 @@ export function SurveyFormForm({ initialData, mode = 'create' }: SurveyFormFormP
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>{mode === 'edit' ? 'Edit Survey Form' : 'Create New Survey Form'}</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-lg sm:text-xl">{mode === 'edit' ? 'Edit Survey Form' : 'Create New Survey Form'}</CardTitle>
+        <CardDescription className="text-sm">
           {mode === 'edit'
             ? 'Update the details of the survey form.'
             : 'Fill in the details to create a new survey form for food safety administration.'}
@@ -67,7 +67,7 @@ export function SurveyFormForm({ initialData, mode = 'create' }: SurveyFormFormP
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
             <FormField
               control={form.control}
               name="district"
@@ -110,8 +110,8 @@ export function SurveyFormForm({ initialData, mode = 'create' }: SurveyFormFormP
               )}
             />
 
-            <div className="flex gap-4">
-              <Button type="submit" className="flex-1" disabled={form.formState.isSubmitting}>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <Button type="submit" className="flex-1 sm:flex-initial" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting
                   ? mode === 'edit'
                     ? 'Updating...'
@@ -125,6 +125,7 @@ export function SurveyFormForm({ initialData, mode = 'create' }: SurveyFormFormP
                 variant="outline"
                 onClick={() => form.reset()}
                 disabled={form.formState.isSubmitting}
+                className="w-full sm:w-auto"
               >
                 Reset
               </Button>

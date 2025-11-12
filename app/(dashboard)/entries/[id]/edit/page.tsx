@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { getShopEntry } from '@/app/actions/shop-entry'
 import { ShopEntryForm } from '@/components/forms/shop-entry-form'
 import type { ShopEntryInput } from '@/lib/zod-schemas'
+import { utcToBrowserTime } from '@/lib/date-utils'
 
 type ShopEntryData = ShopEntryInput & {
   id: string
@@ -27,14 +28,17 @@ export default function EditShopEntryPage() {
           setFormData({
             id: entry.id,
             surveyFormId: entry.surveyFormId,
-            surveyDate: entry.surveyDate,
+            // Convert UTC dates from database to browser local time
+            surveyDate: utcToBrowserTime(entry.surveyDate),
             shopName: entry.shopName,
             shopAddress: entry.shopAddress,
             phoneNumber: entry.phoneNumber || undefined,
             shopType: entry.shopType as any,
             hasLicense: entry.hasLicense as any,
             licenseNumber: entry.licenseNumber || undefined,
-            licenseExpiryDate: entry.licenseExpiryDate || undefined,
+            licenseExpiryDate: entry.licenseExpiryDate
+              ? utcToBrowserTime(entry.licenseExpiryDate)
+              : undefined,
             fostacTraining: entry.fostacTraining as any,
             licenseType: entry.licenseType as any,
             remarks: entry.remarks || undefined,
@@ -59,7 +63,7 @@ export default function EditShopEntryPage() {
 
   if (loading) {
     return (
-      <div className="w-full max-w-7xl mx-auto py-8 px-4">
+      <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4">
         <div className="text-center">Loading...</div>
       </div>
     )
@@ -70,7 +74,7 @@ export default function EditShopEntryPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4">
       <ShopEntryForm initialData={formData} mode="edit" />
     </div>
   )

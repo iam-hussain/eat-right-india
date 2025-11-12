@@ -8,6 +8,12 @@ import { toast } from 'sonner'
 import { shopEntrySchema, type ShopEntryInput } from '@/lib/zod-schemas'
 import { createShopEntry, updateShopEntry } from '@/app/actions/shop-entry'
 import { getSurveyForms } from '@/app/actions/survey-form'
+import {
+  getCurrentBrowserDateTime,
+  dateToDatetimeLocal,
+  datetimeLocalToDate,
+  formatDateForDatetimeLocal,
+} from '@/lib/date-utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -49,7 +55,7 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
     resolver: zodResolver(shopEntrySchema) as any,
     defaultValues: initialData || {
       surveyFormId: '',
-      surveyDate: new Date(),
+      surveyDate: getCurrentBrowserDateTime(),
       shopName: '',
       shopAddress: '',
       phoneNumber: '',
@@ -139,8 +145,8 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
-        <CardTitle>{mode === 'edit' ? 'Edit Shop Entry' : 'Create New Shop Entry'}</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-lg sm:text-xl">{mode === 'edit' ? 'Edit Shop Entry' : 'Create New Shop Entry'}</CardTitle>
+        <CardDescription className="text-sm">
           {mode === 'edit'
             ? 'Update the details of the shop entry.'
             : 'Fill in the details to add a new shop entry to the survey form.'}
@@ -148,7 +154,7 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6 w-full">
             <FormField
               control={form.control}
               name="surveyFormId"
@@ -186,19 +192,25 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
                 name="surveyDate"
                 render={({ field }) => (
                   <FormItem className="w-full">
-                    <FormLabel>Survey Date (கணக்கெடுப்பு நாள்) *</FormLabel>
+                    <FormLabel>Survey Date & Time (கணக்கெடுப்பு நாள் மற்றும் நேரம்) *</FormLabel>
                     <FormControl>
                       <Input
-                        type="date"
+                        type="datetime-local"
                         className="w-full"
-                        {...field}
                         value={
                           field.value
-                            ? new Date(field.value).toISOString().split('T')[0]
-                            : ''
+                            ? formatDateForDatetimeLocal(field.value)
+                            : dateToDatetimeLocal(getCurrentBrowserDateTime())
                         }
                         onChange={(e) => {
-                          field.onChange(e.target.value ? new Date(e.target.value) : new Date())
+                          const value = e.target.value
+                          if (value) {
+                            // Convert datetime-local (browser time) to Date object
+                            // This will be stored as UTC in the database
+                            field.onChange(datetimeLocalToDate(value))
+                          } else {
+                            field.onChange(getCurrentBrowserDateTime())
+                          }
                         }}
                       />
                     </FormControl>
@@ -354,14 +366,19 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
                           <Input
                             type="date"
                             className="w-full"
-                            {...field}
                             value={
                               field.value
-                                ? new Date(field.value).toISOString().split('T')[0]
+                                ? formatDateForDatetimeLocal(field.value).split('T')[0]
                                 : ''
                             }
                             onChange={(e) => {
-                              field.onChange(e.target.value ? new Date(e.target.value) : null)
+                              if (e.target.value) {
+                                // Create date in browser timezone, will be stored as UTC
+                                const localDate = new Date(e.target.value + 'T00:00:00')
+                                field.onChange(localDate)
+                              } else {
+                                field.onChange(null)
+                              }
                             }}
                           />
                         </FormControl>
@@ -411,8 +428,8 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
               )}
             />
 
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Button type="submit" className="flex-1" disabled={form.formState.isSubmitting}>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
+              <Button type="submit" className="flex-1 sm:flex-initial" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting
                   ? mode === 'edit'
                     ? 'Updating...'
@@ -426,7 +443,7 @@ export function ShopEntryForm({ initialData, mode = 'create' }: ShopEntryFormPro
                 variant="outline"
                 onClick={() => form.reset()}
                 disabled={form.formState.isSubmitting}
-                className="sm:w-auto w-full"
+                className="w-full sm:w-auto"
               >
                 Reset
               </Button>

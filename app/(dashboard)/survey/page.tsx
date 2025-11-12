@@ -42,7 +42,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Plus, Edit, Trash2, MoreVertical, Filter } from 'lucide-react'
+import { Plus, Edit, Trash2, MoreVertical, Filter, Download, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react'
+import { exportToCSV, exportToExcel } from '@/lib/export-utils'
+import { Label } from '@/components/ui/label'
 
 type SurveyForm = {
   id: string
@@ -64,8 +66,16 @@ export default function SurveyFormsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    taluk: false,
+    village: false,
+    createdAt: false,
+    updatedAt: false,
+  })
   const [globalFilter, setGlobalFilter] = useState('')
+  const [dateFilterFrom, setDateFilterFrom] = useState('')
+  const [dateFilterTo, setDateFilterTo] = useState('')
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -105,33 +115,117 @@ export default function SurveyFormsPage() {
     () => [
       {
         accessorKey: 'district',
-        header: 'District',
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8 px-2"
+            >
+              District
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
         cell: ({ row }) => <div className="font-medium">{row.getValue('district')}</div>,
       },
       {
         accessorKey: 'taluk',
-        header: 'Taluk',
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8 px-2"
+            >
+              Taluk
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
         cell: ({ row }) => <div>{row.getValue('taluk') || '-'}</div>,
       },
       {
         accessorKey: 'village',
-        header: 'Village',
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8 px-2"
+            >
+              Village
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
         cell: ({ row }) => <div>{row.getValue('village') || '-'}</div>,
       },
       {
         accessorKey: '_count.shopEntries',
-        header: 'Shop Entries',
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8 px-2"
+            >
+              Shop Entries
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
         cell: ({ row }) => {
           const count = row.original._count.shopEntries
-          return <div className="text-center">{count}</div>
+          return <div>{count}</div>
         },
       },
       {
         accessorKey: 'createdAt',
-        header: 'Created',
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8 px-2"
+            >
+              Created
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
         cell: ({ row }) => {
           const date = new Date(row.getValue('createdAt'))
           return <div>{date.toLocaleDateString()}</div>
+        },
+        sortingFn: (rowA, rowB) => {
+          const dateA = new Date(rowA.getValue('createdAt') as Date)
+          const dateB = new Date(rowB.getValue('createdAt') as Date)
+          return dateA.getTime() - dateB.getTime()
+        },
+      },
+      {
+        accessorKey: 'updatedAt',
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-8 px-2"
+            >
+              Updated
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
+        cell: ({ row }) => {
+          const date = new Date(row.getValue('updatedAt'))
+          return <div>{date.toLocaleDateString()}</div>
+        },
+        sortingFn: (rowA, rowB) => {
+          const dateA = new Date(rowA.getValue('updatedAt') as Date)
+          const dateB = new Date(rowB.getValue('updatedAt') as Date)
+          return dateA.getTime() - dateB.getTime()
         },
       },
       {
@@ -168,8 +262,74 @@ export default function SurveyFormsPage() {
     []
   )
 
+  // Filter data based on date ranges
+  const filteredData = useMemo(() => {
+    let filtered = [...data]
+
+    // Filter by created date range
+    if (dateFilterFrom || dateFilterTo) {
+      filtered = filtered.filter((form) => {
+        const entryDate = new Date(form.createdAt)
+        const fromDate = dateFilterFrom ? new Date(dateFilterFrom) : null
+        const toDate = dateFilterTo ? new Date(dateFilterTo + 'T23:59:59') : null
+
+        if (fromDate && entryDate < fromDate) return false
+        if (toDate && entryDate > toDate) return false
+        return true
+      })
+    }
+
+    return filtered
+  }, [data, dateFilterFrom, dateFilterTo])
+
+  const handleExportCSV = () => {
+    const visibleColumns = table
+      .getAllColumns()
+      .filter((col) => col.getIsVisible() && col.id !== 'actions')
+      .map((col) => {
+        const def = col.columnDef
+        return {
+          key: col.id,
+          header: typeof def.header === 'string' ? def.header : col.id,
+          accessor: (row: SurveyForm) => {
+            if (col.id === '_count.shopEntries') return row._count.shopEntries
+            const value = (row as any)[col.id]
+            if (value instanceof Date) return value.toLocaleString()
+            return value ?? ''
+          },
+        }
+      })
+
+    const rowsToExport = table.getRowModel().rows.map((row) => row.original)
+    exportToCSV(rowsToExport, visibleColumns, 'survey-forms')
+    toast.success('Exported to CSV successfully')
+  }
+
+  const handleExportExcel = () => {
+    const visibleColumns = table
+      .getAllColumns()
+      .filter((col) => col.getIsVisible() && col.id !== 'actions')
+      .map((col) => {
+        const def = col.columnDef
+        return {
+          key: col.id,
+          header: typeof def.header === 'string' ? def.header : col.id,
+          accessor: (row: SurveyForm) => {
+            if (col.id === '_count.shopEntries') return row._count.shopEntries
+            const value = (row as any)[col.id]
+            if (value instanceof Date) return value.toLocaleString()
+            return value ?? ''
+          },
+        }
+      })
+
+    const rowsToExport = table.getRowModel().rows.map((row) => row.original)
+    exportToExcel(rowsToExport, visibleColumns, 'survey-forms')
+    toast.success('Exported to Excel successfully')
+  }
+
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -190,62 +350,127 @@ export default function SurveyFormsPage() {
 
   if (loading) {
     return (
-      <div className="w-full max-w-7xl mx-auto py-8 px-4 overflow-x-hidden">
+      <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4 overflow-x-hidden">
         <div className="text-center">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-8 px-4 overflow-x-hidden">
+    <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4 overflow-x-hidden">
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <CardTitle>Survey Forms</CardTitle>
-              <CardDescription>Manage survey forms and their entries</CardDescription>
+              <CardTitle className="text-lg sm:text-xl">Survey Forms</CardTitle>
+              <CardDescription className="text-sm">Manage survey forms and their entries</CardDescription>
             </div>
-            <Button asChild>
+            <Button asChild className="w-full sm:w-auto">
               <Link href="/survey/new">
                 <Plus className="mr-2 h-4 w-4" />
-                Create Survey Form
+                <span className="hidden sm:inline">Create Survey Form</span>
+                <span className="sm:hidden">Create</span>
               </Link>
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4 mb-4">
-            <Input
-              placeholder="Search all columns..."
-              value={globalFilter ?? ''}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              className="max-w-sm"
-            />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <Filter className="mr-2 h-4 w-4" />
-                  Columns
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {table
-                  .getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                      >
-                        {column.id}
-                      </DropdownMenuCheckboxItem>
-                    )
-                  })}
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className="space-y-4 mb-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+              <Input
+                placeholder="Search all columns..."
+                value={globalFilter ?? ''}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                className="flex-1 min-w-[150px] sm:max-w-sm"
+              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    <Filter className="mr-2 h-4 w-4" />
+                    Columns
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="max-h-96 overflow-y-auto">
+                  {table
+                    .getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => {
+                      return (
+                        <DropdownMenuCheckboxItem
+                          key={column.id}
+                          className="capitalize"
+                          checked={column.getIsVisible()}
+                          onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                        >
+                          {column.id === '_count.shopEntries' ? 'Shop Entries' : column.id}
+                        </DropdownMenuCheckboxItem>
+                      )
+                    })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    <Download className="mr-2 h-4 w-4" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuCheckboxItem onClick={handleExportCSV}>
+                    Export as CSV
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem onClick={handleExportExcel}>
+                    Export as Excel
+                  </DropdownMenuCheckboxItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className="w-full sm:w-auto"
+              >
+                {showAdvancedFilters ? (
+                  <>
+                    <ChevronUp className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">Hide Advanced Filters</span>
+                    <span className="sm:hidden">Hide Filters</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">Show Advanced Filters</span>
+                    <span className="sm:hidden">Show Filters</span>
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Advanced Filters Section */}
+            {showAdvancedFilters && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4 border rounded-md bg-muted/50">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="date-from" className="text-sm">Created Date From</Label>
+                  <Input
+                    id="date-from"
+                    type="date"
+                    value={dateFilterFrom}
+                    onChange={(e) => setDateFilterFrom(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="date-to" className="text-sm">Created Date To</Label>
+                  <Input
+                    id="date-to"
+                    type="date"
+                    value={dateFilterTo}
+                    onChange={(e) => setDateFilterTo(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="rounded-md border">
@@ -285,23 +510,33 @@ export default function SurveyFormsPage() {
             </Table>
           </div>
 
-          <div className="flex items-center justify-end space-x-2 mt-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-            </Button>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mt-4">
+            <div className="text-xs sm:text-sm text-muted-foreground">
+              Showing {table.getRowModel().rows.length} of {filteredData.length} entries
+              {filteredData.length !== data.length && (
+                <span className="hidden sm:inline"> (filtered from {data.length} total)</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                className="flex-1 sm:flex-initial"
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                className="flex-1 sm:flex-initial"
+              >
+                Next
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

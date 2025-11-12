@@ -43,8 +43,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="container mx-auto flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="w-full min-h-screen flex items-center justify-center px-4 py-8 sm:py-12">
+      <div className="w-full max-w-md space-y-6 sm:space-y-8">
         <div className="flex flex-col items-center justify-center space-y-4">
           <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
             <Image
@@ -53,20 +53,20 @@ export default function LoginPage() {
               width={400}
               height={200}
               priority
-              className="w-full max-w-md"
+              className="w-full max-w-xs sm:max-w-md"
             />
           </Link>
         </div>
         <Card>
           <CardHeader>
-            <CardTitle className="text-center">Login</CardTitle>
-            <CardDescription className="text-center">
+            <CardTitle className="text-center text-xl sm:text-2xl">Login</CardTitle>
+            <CardDescription className="text-center text-sm sm:text-base">
               Enter your credentials to access the system
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
                 <FormField
                   control={form.control}
                   name="username"

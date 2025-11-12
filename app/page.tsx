@@ -38,9 +38,9 @@ export default async function Home() {
 
         {/* Welcome Message */}
         {session ? (
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold">Welcome, {session.displayName || 'User'}!</h1>
-            <p className="text-muted-foreground">
+          <div className="text-center space-y-2 px-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Welcome, {session.displayName || 'User'}!</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               {session.isSuperAdmin
                 ? 'Super Admin Dashboard'
                 : session.isAdmin
@@ -49,9 +49,9 @@ export default async function Home() {
             </p>
           </div>
         ) : (
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold">Eat Right India</h1>
-            <p className="text-muted-foreground">
+          <div className="text-center space-y-2 px-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Eat Right India</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Food Safety and Drug Administration Department
             </p>
           </div>
