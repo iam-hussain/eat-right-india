@@ -363,43 +363,48 @@ export async function deleteShopEntry(id: string): Promise<ActionResult<void>> {
       where: { id },
     })
 
-    if (existingEntry) {
-      // Create DELETE history record before deletion
-      const allFields: ShopEntryChanges = {}
-      const entryData = {
-        shopName: existingEntry.shopName,
-        shopAddress: existingEntry.shopAddress,
-        phoneNumber: existingEntry.phoneNumber,
-        shopType: existingEntry.shopType,
-        hasLicense: existingEntry.hasLicense,
-        licenseNumber: existingEntry.licenseNumber,
-        licenseExpiryDate: existingEntry.licenseExpiryDate,
-        fostacTraining: existingEntry.fostacTraining,
-        licenseType: existingEntry.licenseType,
-        remarks: existingEntry.remarks,
-        surveyDate: existingEntry.surveyDate,
-        surveyFormId: existingEntry.surveyFormId,
-        surveyorId: existingEntry.surveyorId,
+    if (!existingEntry) {
+      return {
+        success: false,
+        error: 'Shop entry not found',
       }
-
-      // For DELETE, all fields are "before" values (no "after")
-      Object.keys(entryData).forEach((key) => {
-        allFields[key] = {
-          before: entryData[key as keyof typeof entryData],
-          after: null,
-        }
-      })
-
-      await prisma.shopEntryHistory.create({
-        data: {
-          shopEntryId: id,
-          changedBy: session.userId,
-          changeType: 'DELETE',
-          changes: allFields as unknown as object,
-          changeSummary: 'Shop entry deleted',
-        },
-      })
     }
+
+    // Create DELETE history record before deletion
+    const allFields: ShopEntryChanges = {}
+    const entryData = {
+      shopName: existingEntry.shopName,
+      shopAddress: existingEntry.shopAddress,
+      phoneNumber: existingEntry.phoneNumber,
+      shopType: existingEntry.shopType,
+      hasLicense: existingEntry.hasLicense,
+      licenseNumber: existingEntry.licenseNumber,
+      licenseExpiryDate: existingEntry.licenseExpiryDate,
+      fostacTraining: existingEntry.fostacTraining,
+      licenseType: existingEntry.licenseType,
+      remarks: existingEntry.remarks,
+      surveyDate: existingEntry.surveyDate,
+      surveyFormId: existingEntry.surveyFormId,
+      surveyorId: existingEntry.surveyorId,
+    }
+
+    // For DELETE, all fields are "before" values (no "after")
+    Object.keys(entryData).forEach((key) => {
+      allFields[key] = {
+        before: entryData[key as keyof typeof entryData],
+        after: null,
+      }
+    })
+
+    await prisma.shopEntryHistory.create({
+      data: {
+        shopEntryId: id,
+        changedBy: session.userId,
+        changeType: 'DELETE',
+        changes: allFields as unknown as object,
+        changeSummary: 'Shop entry deleted',
+      },
+    })
 
     await prisma.shopEntry.delete({
       where: { id },
@@ -415,6 +420,14 @@ export async function deleteShopEntry(id: string): Promise<ActionResult<void>> {
     console.error('Error deleting shop entry:', error)
 
     if (error instanceof Error) {
+      // Handle Prisma not found errors
+      if (error.message.includes('Record to delete does not exist') || error.message.includes('No record was found')) {
+        return {
+          success: false,
+          error: 'Shop entry not found',
+        }
+      }
+
       return {
         success: false,
         error: error.message || 'Failed to delete shop entry',
