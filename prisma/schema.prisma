@@ -40,18 +40,25 @@ enum LicenseType {
   OTHER
 }
 
+enum ChangeType {
+  CREATE
+  UPDATE
+  DELETE
+}
+
 // Surveyor Model - Authentication and access control
 model Surveyor {
-  id           String      @id @default(auto()) @map("_id") @db.ObjectId
-  username     String      @unique // Username for login (unique)
-  displayName  String // கணக்கெடுப்பாளரின் பெயர் (Surveyor's Display Name)
-  password     String // Password for authentication (should be hashed)
-  isAdmin      Boolean     @default(false) // Admin can create/update SurveyForm
-  isSuperAdmin Boolean     @default(false) // Super admin can manage all users
-  isActive     Boolean     @default(true) // Active status
-  shopEntries  ShopEntry[]
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id               String             @id @default(auto()) @map("_id") @db.ObjectId
+  username         String             @unique // Username for login (unique)
+  displayName      String // கணக்கெடுப்பாளரின் பெயர் (Surveyor's Display Name)
+  password         String // Password for authentication (should be hashed)
+  isAdmin          Boolean            @default(false) // Admin can create/update SurveyForm
+  isSuperAdmin     Boolean            @default(false) // Super admin can manage all users
+  isActive         Boolean            @default(true) // Active status
+  shopEntries      ShopEntry[]
+  shopEntryHistory ShopEntryHistory[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 
   @@map("surveyors")
 }
@@ -71,26 +78,45 @@ model SurveyForm {
 
 // Shop Entry Model - Table row data
 model ShopEntry {
-  id                String       @id @default(auto()) @map("_id") @db.ObjectId
-  surveyFormId      String       @db.ObjectId
-  surveyForm        SurveyForm   @relation(fields: [surveyFormId], references: [id], onDelete: Cascade)
-  surveyorId        String?      @db.ObjectId // Reference to surveyor who created/edits this entry
-  surveyor          Surveyor?    @relation(fields: [surveyorId], references: [id])
+  id                String             @id @default(auto()) @map("_id") @db.ObjectId
+  surveyFormId      String             @db.ObjectId
+  surveyForm        SurveyForm         @relation(fields: [surveyFormId], references: [id], onDelete: Cascade)
+  surveyorId        String?            @db.ObjectId // Reference to surveyor who created/edits this entry
+  surveyor          Surveyor?          @relation(fields: [surveyorId], references: [id])
   surveyDate        DateTime // கணக்கெடுப்பு நாள் (Survey Date)
   shopName          String // கடையின் பெயர் (Shop Name)
   shopAddress       String // முகவரி (Address)
   phoneNumber       String? // தொலைபேசி எண் (Phone Number)
   shopType          ShopType // கடையின் வகை (Shop Type)
   hasLicense        YesNo // உரிமம் சான்று (License Certificate)
-  licenseNumber     String?      @unique // உரிமம் எண் (License Number) - Unique
+  licenseNumber     String?            @unique // உரிமம் எண் (License Number) - Unique
   licenseExpiryDate DateTime? // உரிமம் முடிவடையும் காலம் (License Expiry Period)
   fostacTraining    YesNo // (FOSTAC) பயிற்சியில் பங்குபெற்றவரா (FOSTAC Training Participation)
   licenseType       LicenseType? // உரிமம் சான்றின் வகை (Type of License Certificate)
   remarks           String? // குறிப்பு (Remarks)
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  history           ShopEntryHistory[]
 
   @@index([surveyFormId])
   @@index([surveyorId])
   @@map("shop_entries")
+}
+
+// Shop Entry History Model - Audit trail for shop entry changes
+model ShopEntryHistory {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  shopEntryId   String     @db.ObjectId
+  shopEntry     ShopEntry  @relation(fields: [shopEntryId], references: [id], onDelete: Cascade)
+  changedBy     String     @db.ObjectId // Surveyor who made the change
+  surveyor      Surveyor   @relation(fields: [changedBy], references: [id])
+  changeType    ChangeType // Type of change: CREATE, UPDATE, DELETE
+  changedAt     DateTime   @default(now())
+  changes       Json // Field-level changes with before/after values
+  changeSummary String // Human-readable summary of changes
+
+  @@index([shopEntryId])
+  @@index([changedBy])
+  @@index([changedAt])
+  @@map("shop_entry_history")
 }

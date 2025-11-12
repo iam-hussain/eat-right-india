@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowLeft, Edit, Calendar, MapPin, Phone, Building2, FileText, Award, CheckCircle2, XCircle, User } from 'lucide-react'
 import { formatDateTimeForDisplay, formatDateForDisplay } from '@/lib/date-utils'
+import { ShopEntryHistory } from '@/components/shop-entry-history'
 
 const shopTypeLabels: Record<string, string> = {
   RESTAURANT: 'Restaurant',
@@ -359,6 +360,9 @@ export default function ShopEntryDetailPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Change History Card */}
+        <ShopEntryHistory shopEntryId={entry.id} />
       </div>
     </div>
   )

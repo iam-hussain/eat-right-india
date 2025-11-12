@@ -4,6 +4,11 @@ import { revalidatePath } from 'next/cache'
 import { prisma } from '@/db'
 import { requireAuth, getSession } from '@/lib/auth'
 import { shopEntrySchema, type ShopEntryInput } from '@/lib/zod-schemas'
+import {
+  compareShopEntryFields,
+  generateChangeSummary,
+  type ShopEntryChanges,
+} from '@/lib/history-utils'
 
 export type ActionResult<T> =
   | { success: true; data: T }
@@ -65,6 +70,42 @@ export async function createShopEntry(
         fostacTraining: validatedData.fostacTraining,
         licenseType: validatedData.licenseType,
         remarks: validatedData.remarks,
+      },
+    })
+
+    // Create initial history record for CREATE
+    const allFields: ShopEntryChanges = {}
+    const entryData = {
+      shopName: validatedData.shopName,
+      shopAddress: validatedData.shopAddress,
+      phoneNumber: validatedData.phoneNumber,
+      shopType: validatedData.shopType,
+      hasLicense: validatedData.hasLicense,
+      licenseNumber: validatedData.licenseNumber,
+      licenseExpiryDate: validatedData.licenseExpiryDate,
+      fostacTraining: validatedData.fostacTraining,
+      licenseType: validatedData.licenseType,
+      remarks: validatedData.remarks,
+      surveyDate: validatedData.surveyDate,
+      surveyFormId: validatedData.surveyFormId,
+      surveyorId: validatedData.surveyorId,
+    }
+
+    // For CREATE, all fields are "after" values (no "before")
+    Object.keys(entryData).forEach((key) => {
+      allFields[key] = {
+        before: null,
+        after: entryData[key as keyof typeof entryData],
+      }
+    })
+
+    await prisma.shopEntryHistory.create({
+      data: {
+        shopEntryId: shopEntry.id,
+        changedBy: session.userId,
+        changeType: 'CREATE',
+        changes: allFields as unknown as object,
+        changeSummary: 'Shop entry created',
       },
     })
 
@@ -203,6 +244,26 @@ export async function updateShopEntry(
       }
     }
 
+    // Prepare new entry data for comparison
+    const newEntryData = {
+      shopName: validatedData.shopName,
+      shopAddress: validatedData.shopAddress,
+      phoneNumber: validatedData.phoneNumber,
+      shopType: validatedData.shopType,
+      hasLicense: validatedData.hasLicense,
+      licenseNumber: validatedData.licenseNumber,
+      licenseExpiryDate: validatedData.licenseExpiryDate,
+      fostacTraining: validatedData.fostacTraining,
+      licenseType: validatedData.licenseType,
+      remarks: validatedData.remarks,
+      surveyDate: validatedData.surveyDate,
+      surveyFormId: validatedData.surveyFormId,
+      surveyorId: validatedData.surveyorId || session.userId,
+    }
+
+    // Compare old vs new to find changes
+    const changes = compareShopEntryFields(existingEntry, newEntryData)
+
     const shopEntry = await prisma.shopEntry.update({
       where: { id },
       data: {
@@ -221,6 +282,19 @@ export async function updateShopEntry(
         remarks: validatedData.remarks,
       },
     })
+
+    // Create history record if there are changes
+    if (Object.keys(changes).length > 0) {
+      await prisma.shopEntryHistory.create({
+        data: {
+          shopEntryId: shopEntry.id,
+          changedBy: session.userId,
+          changeType: 'UPDATE',
+          changes: changes as unknown as object,
+          changeSummary: generateChangeSummary(changes),
+        },
+      })
+    }
 
     revalidatePath('/entries')
     revalidatePath(`/entries/${id}`)
@@ -254,9 +328,78 @@ export async function updateShopEntry(
   }
 }
 
-export async function deleteShopEntry(id: string): Promise<ActionResult<void>> {
+export async function getShopEntryHistory(shopEntryId: string) {
   try {
     await requireAuth()
+
+    const history = await prisma.shopEntryHistory.findMany({
+      where: { shopEntryId },
+      orderBy: {
+        changedAt: 'desc',
+      },
+      include: {
+        surveyor: {
+          select: {
+            id: true,
+            displayName: true,
+          },
+        },
+      },
+    })
+
+    return { success: true, data: history }
+  } catch (error) {
+    console.error('Error fetching shop entry history:', error)
+    return { success: false, error: 'Failed to fetch shop entry history' }
+  }
+}
+
+export async function deleteShopEntry(id: string): Promise<ActionResult<void>> {
+  try {
+    const session = await requireAuth()
+
+    // Get entry before deletion for history
+    const existingEntry = await prisma.shopEntry.findUnique({
+      where: { id },
+    })
+
+    if (existingEntry) {
+      // Create DELETE history record before deletion
+      const allFields: ShopEntryChanges = {}
+      const entryData = {
+        shopName: existingEntry.shopName,
+        shopAddress: existingEntry.shopAddress,
+        phoneNumber: existingEntry.phoneNumber,
+        shopType: existingEntry.shopType,
+        hasLicense: existingEntry.hasLicense,
+        licenseNumber: existingEntry.licenseNumber,
+        licenseExpiryDate: existingEntry.licenseExpiryDate,
+        fostacTraining: existingEntry.fostacTraining,
+        licenseType: existingEntry.licenseType,
+        remarks: existingEntry.remarks,
+        surveyDate: existingEntry.surveyDate,
+        surveyFormId: existingEntry.surveyFormId,
+        surveyorId: existingEntry.surveyorId,
+      }
+
+      // For DELETE, all fields are "before" values (no "after")
+      Object.keys(entryData).forEach((key) => {
+        allFields[key] = {
+          before: entryData[key as keyof typeof entryData],
+          after: null,
+        }
+      })
+
+      await prisma.shopEntryHistory.create({
+        data: {
+          shopEntryId: id,
+          changedBy: session.userId,
+          changeType: 'DELETE',
+          changes: allFields as unknown as object,
+          changeSummary: 'Shop entry deleted',
+        },
+      })
+    }
 
     await prisma.shopEntry.delete({
       where: { id },
