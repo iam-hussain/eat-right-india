@@ -420,11 +420,15 @@ export async function deleteShopEntry(id: string): Promise<ActionResult<void>> {
     console.error('Error deleting shop entry:', error)
 
     if (error instanceof Error) {
-      // Handle Prisma not found errors
-      if (error.message.includes('Record to delete does not exist') || error.message.includes('No record was found')) {
+      // Handle Prisma not found errors (race conditions)
+      if (
+        error.message.includes('Record to delete does not exist') ||
+        error.message.includes('No record was found') ||
+        error.message.includes('depends on one or more records that were required but not found')
+      ) {
         return {
           success: false,
-          error: 'Shop entry not found',
+          error: 'Shop entry not found or already deleted',
         }
       }
 

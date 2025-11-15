@@ -42,7 +42,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Plus, Edit, Trash2, MoreVertical, Filter, Download, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Edit, Trash2, MoreVertical, Filter, Download, ArrowUpDown, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
 import { exportToCSV, exportToExcel } from '@/lib/export-utils'
 import { Label } from '@/components/ui/label'
 
@@ -64,6 +64,7 @@ export default function SurveyFormsPage() {
   const [loading, setLoading] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
@@ -98,16 +99,23 @@ export default function SurveyFormsPage() {
   }
 
   const handleDelete = async () => {
-    if (!deleteId) return
+    if (!deleteId || deleting) return
 
-    const result = await deleteSurveyForm(deleteId)
-    if (result.success) {
-      toast.success('Survey form deleted successfully')
-      setDeleteDialogOpen(false)
-      setDeleteId(null)
-      loadData()
-    } else {
-      toast.error(result.error || 'Failed to delete survey form')
+    try {
+      setDeleting(true)
+      const result = await deleteSurveyForm(deleteId)
+      if (result.success) {
+        toast.success('Survey form deleted successfully')
+        setDeleteDialogOpen(false)
+        setDeleteId(null)
+        loadData()
+      } else {
+        toast.error(result.error || 'Failed to delete survey form')
+      }
+    } catch (error) {
+      toast.error('An error occurred while deleting the survey form')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -542,7 +550,14 @@ export default function SurveyFormsPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <Dialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          if (!deleting) {
+            setDeleteDialogOpen(open)
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Survey Form</DialogTitle>
@@ -551,11 +566,26 @@ export default function SurveyFormsPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleting}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Delete
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

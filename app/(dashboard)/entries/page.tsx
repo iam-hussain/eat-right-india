@@ -42,7 +42,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Plus, Edit, Trash2, Filter, Download, ArrowUpDown, ChevronDown, ChevronUp, Eye } from 'lucide-react'
+import { Plus, Edit, Trash2, Filter, Download, ArrowUpDown, ChevronDown, ChevronUp, Eye, Loader2 } from 'lucide-react'
 import { exportToCSV, exportToExcel } from '@/lib/export-utils'
 import { Label } from '@/components/ui/label'
 
@@ -92,6 +92,7 @@ export default function ShopEntriesPage() {
   const [loading, setLoading] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
@@ -134,16 +135,23 @@ export default function ShopEntriesPage() {
   }
 
   const handleDelete = async () => {
-    if (!deleteId) return
+    if (!deleteId || deleting) return
 
-    const result = await deleteShopEntry(deleteId)
-    if (result.success) {
-      toast.success('Shop entry deleted successfully')
-      setDeleteDialogOpen(false)
-      setDeleteId(null)
-      loadData()
-    } else {
-      toast.error(result.error || 'Failed to delete shop entry')
+    try {
+      setDeleting(true)
+      const result = await deleteShopEntry(deleteId)
+      if (result.success) {
+        toast.success('Shop entry deleted successfully')
+        setDeleteDialogOpen(false)
+        setDeleteId(null)
+        loadData()
+      } else {
+        toast.error(result.error || 'Failed to delete shop entry')
+      }
+    } catch (error) {
+      toast.error('An error occurred while deleting the shop entry')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -923,7 +931,14 @@ export default function ShopEntriesPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <Dialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          if (!deleting) {
+            setDeleteDialogOpen(open)
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Shop Entry</DialogTitle>
@@ -932,11 +947,26 @@ export default function ShopEntriesPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleting}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Delete
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

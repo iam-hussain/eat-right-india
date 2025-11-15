@@ -152,6 +152,18 @@ export async function deleteSurveyForm(id: string): Promise<ActionResult<void>> 
   try {
     await requireAdmin()
 
+    // Check if the survey form exists
+    const surveyForm = await prisma.surveyForm.findUnique({
+      where: { id },
+    })
+
+    if (!surveyForm) {
+      return {
+        success: false,
+        error: 'Survey form not found',
+      }
+    }
+
     // Check if there are shop entries associated with this form
     const shopEntriesCount = await prisma.shopEntry.count({
       where: { surveyFormId: id },
@@ -179,6 +191,18 @@ export async function deleteSurveyForm(id: string): Promise<ActionResult<void>> 
     console.error('Error deleting survey form:', error)
 
     if (error instanceof Error) {
+      // Handle Prisma not found errors (race conditions)
+      if (
+        error.message.includes('Record to delete does not exist') ||
+        error.message.includes('No record was found') ||
+        error.message.includes('depends on one or more records that were required but not found')
+      ) {
+        return {
+          success: false,
+          error: 'Survey form not found or already deleted',
+        }
+      }
+
       return {
         success: false,
         error: error.message || 'Failed to delete survey form',
